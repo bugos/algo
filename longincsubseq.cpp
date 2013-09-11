@@ -1,5 +1,5 @@
 /* Written by bugos 6/2013
-Longest Increasing Subsequence [dp with tabulation = O(n^2)]
+Longest Increasing Subsequence [dp with tabulation = O(n^2)] and output of the LIS in increasing order
 https://kth.kattis.scrool.se/problems/longincsubseq
 */
 
@@ -58,6 +58,7 @@ void find_posmax() {
 }
 
 //fills the out[] array with the indexes of the elements of the lis
+//starting from the last element
 void build_out() {
     int i = posmax;
     #define k lis[i]-1 //counter
