@@ -1,3 +1,4 @@
+//bugos, octomber 26-2013
 #define DEBUG1
 #define MAXITEMS 20
 
