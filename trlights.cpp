@@ -22,10 +22,8 @@ int main() {
         switch (c) {
             case 'r':
                 redCount++;
-                break;
             case 'g':
                 greenCount++;
-                break;
         }
     }
 
