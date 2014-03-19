@@ -48,19 +48,23 @@ int main(int argc, char *argv[])
         A_dot_B = inner_product(A.begin(), A.end(), B.begin(), 0);
 
         A_dot_A = inner_product(A.begin(), A.end(), A.begin(), 0);
-        magnA = sqrt( A_dot_A ); //TODO: check != 0
+        magnA = sqrt( A_dot_A );
 
         B_dot_B = inner_product(B.begin(), B.end(), B.begin(), 0);
         magnB = sqrt( B_dot_B );
-
-        theta = acos( A_dot_B / (magnA * magnB) );
-
-        //output
+    
+        if (magnA * magnB != 0) {
+            theta = acos( A_dot_B / (magnA * magnB) );
+        }
+        else {
+            theta = 0;
+        }
+        //Output
         printf("%.4f", theta);
         //cout << '\n' << setprecision(4) << fixed << theta; //#include <iomanip>
     }
-    else
+    else {
         cout << "Error";
-
+    }
     return 0;
 }
