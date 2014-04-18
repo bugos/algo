@@ -35,8 +35,8 @@ int main() {
 int heapAdd(int w, int v) {
     for(int i = 0; i < N_MOST_SUN; i++) {
         if (w > mostSunW[i]) { //found a spot
-            //Move previous values one position on the right
-            // overwriting the last one and starting from the end
+            //Move previous values one position to the right
+            // overwriting the last value and starting from the end.
             for(int j = N_MOST_SUN-1; j > i; j--) {
                 mostSunW[j] = mostSunW[j-1];
                 mostSun [j] = mostSun [j-1];
