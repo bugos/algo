@@ -1,5 +1,6 @@
-# |C| BugOS
-# http://code.google.com/codejam/contest/1836486/dashboard#s=p2&a=2
+'''
+|C| BugOS
+http://code.google.com/codejam/contest/1836486/dashboard#s=p2&a=2
 import itertools
 
 def find_equal_sum_subsets(S):
