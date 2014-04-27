@@ -6,13 +6,13 @@ using namespace std;
 struct Point {
 	int x, y;
 	int code;
-	int deleted;
-	static int distance( Point a, Point b ) {
-		int distance_squared = pow( a.x - b.x, 2 ) - pow( a.y - b.y, 2 );
-		return sqrt( ceil( distance_squared ) );
+	bool deleted;
+	static double distanceSquared( Point a, Point b ) {
+		return pow( a.x - b.x, 2 ) + pow( a.y - b.y, 2 );
 	}
 } A[ NMAX ], B[ NMAX ];
-int minDist, Na, Nb;
+double minDist;
+int Na, Nb;
 int over[ NMAX * NMAX ][ 2 ], K;
 
 void inputOffer( int &N, Point p[] ) {
@@ -26,7 +26,7 @@ void inputOffer( int &N, Point p[] ) {
 void buildOver() {
 	for( int a = 0; a < Na; a++ ) {
 		for( int b = 0; b < Nb; b++ ) {
-			if( Point::distance( A[ a ], B[ b ] ) <= minDist ) {
+			if( Point::distanceSquared( A[ a ], B[ b ] ) <= minDist ) {
 				over[ K ][ 0 ] = A[ a ].code;
 				over[ K ][ 1 ] = B[ b ].code;
 				K++;
@@ -46,30 +46,31 @@ void removeInterfering() {
 			if( A[ a ].deleted or B[ b ].deleted ) {
 				continue;
 			}
-			if( Point::distance( A[ a ], B[ b ] ) <= minDist ) {
+			if( Point::distanceSquared( A[ a ], B[ b ] ) <= minDist ) {
 				A[ a ].deleted = true;
 				B[ b ].deleted = true;
 			}
 		}
 	}	
 }
-void printOffer(int &n, Point p[] ) {
-	for( int i = 0; i < n; i++ ) {
-		if( p )
-		cout << p[ i ].code << ' '  
-		     << p[ i ].x << ' ' 
-		     << p[ i ].y << '\n' ;
+void printOffer(int &N, Point p[] ) {
+	for( int i = 0; i < N; i++ ) {
+		if( !p[ i ].deleted ) {
+			cout << p[ i ].code << ' '  
+			     << p[ i ].x << ' ' 
+			     << p[ i ].y << '\n' ;
+		}
 	}
 }
 int main() {
-	//input
 	cin >> minDist;
+	minDist = pow( minDist, 2 ); //compare squares of distances
 	inputOffer( Na, A );
 	inputOffer( Nb, B );
-	//phase 1
+	//Get all interfering points in over[] and output them
 	buildOver();
 	printOver();
-	//phase 2
+	//Remove interfering points and output the offers
 	removeInterfering();
 	printOffer( Na, A );
 	printOffer( Nb, B );
