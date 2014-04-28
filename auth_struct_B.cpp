@@ -13,7 +13,7 @@ struct Point {
 } A[ NMAX ], B[ NMAX ];
 double minDist;
 int Na, Nb;
-int over[ NMAX * NMAX ][ 2 ], K;
+int over[ NMAX * NMAX ][ 2 ], K = 0;
 
 void inputOffer( int &N, Point p[] ) {
 	cin >> N;
@@ -53,7 +53,7 @@ void removeInterfering() {
 		}
 	}	
 }
-void printOffer(int &N, Point p[] ) {
+void printOffer( int &N, Point p[] ) {
 	for( int i = 0; i < N; i++ ) {
 		if( !p[ i ].deleted ) {
 			cout << p[ i ].code << ' '  
