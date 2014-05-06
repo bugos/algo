@@ -8,6 +8,7 @@
 #define TRUE 1
 #define FALSE 0
 
+#define MAXN 100
 #define DIMENSIONS 3
 #define X coordinates[ 0 ]
 #define Y coordinates[ 1 ]
@@ -15,9 +16,7 @@
 #define RED 2
 #define YELLOW 1
 #define GREEN 0
-#define SELF airspace[ 0 ]
-
-#define MAXN 100
+#define SELF airplanes[ 0 ]
 
 typedef struct Airplane {
 	char id[ 10 ];
@@ -31,17 +30,17 @@ double airplaneDistance( Airplane a, Airplane b ) {
 	res = sqrt( res );
 	return res;
 }
-void inputAirplaneIds( int NPlanes, Airplane airspace[] ) {
+void inputAirplaneIds( int NPlanes, Airplane airplanes[] ) {
 	FOR0( plane, NPlanes ) {
-		scanf( "%s", airspace[ plane ].id );
+		scanf( "%s", airplanes[ plane ].id );
 	}
 }
 void inputAirplane( Airplane *plane ) {
-	scanf( "%d %d %d", &plane->X, &plane->Y, &plane->Z );
+	scanf( "%d %d %d", &plane->X, &plane->Y, &plane->Z ); //todo follow var DIMENSIONS
 }
-void inputAirspaceSnapshot( int NPlanes, Airplane airspace[] ) {
+void inputAirplanes( int NPlanes, Airplane airplanes[] ) {
 	FOR( plane, 1, NPlanes ) {
-		inputAirplane( &airspace[ plane ] );
+		inputAirplane( &airplanes[ plane ] );
 	}
 }
 int alarm( Airplane a, Airplane b, double safeDistance, double *distance ) {
@@ -53,10 +52,10 @@ int alarm( Airplane a, Airplane b, double safeDistance, double *distance ) {
 		return YELLOW;
 	return GREEN;
 }
-void checkForAlarms( int NPlanes, Airplane airspace[], double safeDistance ) {
+void checkForAlarms( int NPlanes, Airplane airplanes[], double safeDistance ) {
 	FOR( plane, 1, NPlanes ) {
 		double dist;
-		switch( alarm( SELF, airspace[ plane ], safeDistance, &dist ) ) {
+		switch( alarm( SELF, airplanes[ plane ], safeDistance, &dist ) ) {
 			case GREEN:
 				break;
 			case YELLOW:
@@ -66,33 +65,31 @@ void checkForAlarms( int NPlanes, Airplane airspace[], double safeDistance ) {
 				printf( "Κόκκινος Συναγερμός: " );
 				break;
 		}
-		printf( "Plane %s is located %lf meters away\n", airspace[ plane ].id, dist );
+		printf( "Plane %s is located %lf meters away\n", airplanes[ plane ].id, dist );
 	}
 }
 BOOL atAirport( Airplane plane ) {
-	BOOL res = TRUE;
 	FOR0( dim, DIMENSIONS ) {
 		if ( plane.coordinates[ dim ] != 0 ) {
-			res = FALSE;
-			break;
+			return FALSE;
 		}
 	}
-	return res;
+	return TRUE;
 }
 int main() {
 	int NPlanes;
 	scanf( "%d", &NPlanes );
 	double safeDistance;
 	scanf( "%lf", &safeDistance );
-	Airplane airspace[ MAXN ];
-	inputAirplaneIds( NPlanes, airspace );
+	Airplane airplanes[ MAXN ];
+	inputAirplaneIds( NPlanes, airplanes );
 	while( TRUE ) {
 		inputAirplane( &SELF );
 		if( atAirport( SELF ) ) {
 			break;
 		}
-		inputAirspaceSnapshot( NPlanes, airspace );
-		checkForAlarms( NPlanes, airspace, safeDistance );
+		inputAirplanes( NPlanes, airplanes );
+		checkForAlarms( NPlanes, airplanes, safeDistance );
 	}
 	return 0;
 }
