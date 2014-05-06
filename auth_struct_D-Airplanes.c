@@ -10,9 +10,6 @@
 
 #define MAXN 100
 #define DIMENSIONS 3
-#define X coordinates[ 0 ]
-#define Y coordinates[ 1 ]
-#define Z coordinates[ 2 ]
 #define RED 2
 #define YELLOW 1
 #define GREEN 0
@@ -35,12 +32,11 @@ void inputAirplaneIds( int NPlanes, Airplane airplanes[] ) {
 		scanf( "%s", airplanes[ plane ].id );
 	}
 }
-void inputAirplane( Airplane *plane ) {
-	scanf( "%d %d %d", &plane->X, &plane->Y, &plane->Z ); //todo follow var DIMENSIONS
-}
-void inputAirplanes( int NPlanes, Airplane airplanes[] ) {
-	FOR( plane, 1, NPlanes ) {
-		inputAirplane( &airplanes[ plane ] );
+void inputAirplanes( int start, int NPlanes, Airplane airplanes[] ) {
+	FOR( plane, start, NPlanes ) {
+		FOR0( dim, DIMENSIONS ) {
+			scanf( "%d", &airplanes[ plane ].coordinates[ dim ] );
+		}
 	}
 }
 int alarm( Airplane a, Airplane b, double safeDistance, double *distance ) {
@@ -84,11 +80,11 @@ int main() {
 	Airplane airplanes[ MAXN ];
 	inputAirplaneIds( NPlanes, airplanes );
 	while( TRUE ) {
-		inputAirplane( &SELF );
+		inputAirplanes( 0, 1, airplanes );
 		if( atAirport( SELF ) ) {
 			break;
 		}
-		inputAirplanes( NPlanes, airplanes );
+		inputAirplanes( 1, NPlanes, airplanes );
 		checkForAlarms( NPlanes, airplanes, safeDistance );
 	}
 	return 0;
