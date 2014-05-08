@@ -15,7 +15,7 @@
 #define UNDEFINED -1
 int NCities, NRoads;
 int distance[ MAXN ][ MAXN ];
-int visited[ MAXN ] = {};
+BOOL visited[ MAXN ];
 int minDistanceTravelled = INT_MAX, minOrigin;
 int Route[ MAXN ], NStops = 0;
 
