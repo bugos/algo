@@ -1,6 +1,6 @@
 // Developer Evangelos 'bugos' Mamalakis
 // A non-optimal solution to the travelling salesman problem.
-// Trying each city as origin, visit the nearest neighbor each time until all is visited. 
+// Trying each city as origin, visit the nearest neighbor each time until we have visited all of them. 
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
@@ -23,6 +23,7 @@ void inputGraph() {
 	scanf( "%d %d", &NCities, &NRoads );
 	assert( NCities < MAXN 
 	     && NRoads  < pow( MAXN, 2 ) );
+	assert( NRoads == NCities * (NCities - 1) / 2 ) // Complete Graph
 	FOR0( i, NRoads ) { 
 		static int city1, city2, length;
 		scanf( "%d %d %d", &city1, &city2, &length );
@@ -32,7 +33,6 @@ void inputGraph() {
 		distance[ city1 ][ city2 ] = length;
 		distance[ city2 ][ city1 ] = length;
 	}
-	//assert that we have a Complete Graph 
 	FOR0( sameOriginDestination, NCities ) {
 		distance[ sameOriginDestination ][ sameOriginDestination ] = 0;
 	}
@@ -48,7 +48,7 @@ int findNearestNeighbour( int origin ) {
 	return nearest;
 }
 int travelFrom( int origin, BOOL saveRoute ) {
-	FOR0( city, NCities ) { //reset visited status
+	FOR0( city, NCities ) { 
 		visited[ city ] = FALSE;
 	}
 	int current = origin, nearest = origin, distanceTravelled = 0;
