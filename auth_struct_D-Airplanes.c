@@ -16,7 +16,7 @@
 #define SELF airplanes[ 0 ]
 
 typedef struct Airplane {
-	char id[ 10 ];
+	char id[ 10 + 1 ];
 	int coordinates[ DIMENSIONS ];
 } Airplane;
 double airplaneDistance( Airplane a, Airplane b ) {
