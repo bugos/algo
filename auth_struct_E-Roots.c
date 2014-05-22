@@ -4,43 +4,42 @@
 
 #define PRECISION 1e-8
 
-double nroot( double x, int *depth ) {
+double nroot( double x, int *depth, int maxDepth ) {
 	double fx = pow( x, 3 );
 	double f2x = 3 * pow( x, 2 );
 	double nextx = x - fx / f2x;
-	if ( fabs( nextx - x ) < PRECISION || *depth > MAX_DEPTH ) {
+	if ( fabs( nextx - x ) < PRECISION || *depth >= maxDepth ) {
 		return x;
 	}
 	++*depth;
-	return nroot( nextx, depth ); 
+	return nroot( nextx, depth, maxDepth ); 
 }
-double froot( double x, double prevx, int *depth ) {
+double froot( double x, double prevx, int *depth, int maxDepth ) {
 	double fx = pow( x, 3 );
 	double prevfx = pow( prevx, 3 );
 	double nextx = x - (x - prevx) * fx / (fx - prevfx);
-	if ( fabs( nextx - x ) < PRECISION || *depth > MAX_DEPTH ) {
+	if ( fabs( nextx - x ) < PRECISION || *depth >= maxDepth ) {
 		return x;
 	}
 	++*depth;
-	return froot( nextx, x, depth );
+	return froot( nextx, x, depth, maxDepth );
 }
 int main(void) {
-	int MAX_DEPTH;
-	scanf( "%d", &MAX_DEPTH );
+	int maxDepth;
+	scanf( "%d", &maxDepth );
 	
 	const double random = 10;
-	//nRoot
+
 	int nDepth = 0;
-	double nResult = nroot( random, &nDepth );
-	//fRoot
+	double nResult = nroot( random, &nDepth, maxDepth );
+
 	int fDepth = 0;
-	double fResult = froot( random, random * 2, &fDepth );
+	double fResult = froot( random, random * 2, &fDepth, maxDepth );
 	
-	//Output
-	printf( "%f %f", nResult, fResult );
+	printf( "nroot() returned %f after %d calls.\n", nResult, nDepth );
+	printf( "froot() returned %f after %d calls.\n", fResult, fDepth );
 	return 0;
 }
-
 /*
 Να γραφεί το πρόγραμμα στο οποίο να ορίζεται η συνάρτηση nroot(…) η οποία, μέσα από μια αναδρομική (recursive)  διαδικασία, υπολογίζει μια πραγματική ρίζα της εξίσωσης f(x)=0 προσεγγίζοντας την με την αναδρομική σχέση  xi+1=xi-f(xi)/f’(xi). Από τη σχέση αυτή παράγεται μία ακολουθία τιμών η οποία, κάτω από ορισμένες προϋποθέσεις, συγκλίνει προς μια πραγματική ρίζα της f(x)=0. Σε διαφορετική περίπτωση η ακολουθία αποκλίνει ή οι τιμές της παλινδρομούν. Ως αρχική τιμή για το x0 δίνεται ένας τυχαίος αριθμός.  
 Στο ίδιο πρόγραμμα να οριστεί και η συνάρτηση froot(…) η οποία να υπολογίζει, μέσα από μια αναδρομική (recursive) διαδικασία, μια πραγματική ρίζα της εξίσωσης f(x)=0 προσεγγίζοντας την με την αναδρομική σχέση xi+1 = xi-(xi-xi-1)f(xi)/(f(xi-f(xi-1)). Από τη σχέση αυτή παράγεται μία ακολουθία τιμών η οποία, κάτω από ορισμένες προϋποθέσεις, συγκλίνει προς μια πραγματική ρίζα της f(x)=0. Σε διαφορετική περίπτωση η ακολουθία αποκλίνει ή οι τιμές της παλινδρομούν.
