@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FOR0( var, limit ) int var; for ( var = 0; var < limit; var++ )
+#define REPEAT_FOR( times ) int i; for ( i = 0; i < limit; i++ )
 #define NUMBER_LENGTH 10
 
 FILE *openFile( char *filename, char *mode ) {
@@ -21,7 +21,7 @@ int inputSubscribersToFile() {
 
     printf( "Insert %d subscriber numbers.\n", NSubscribers );
     char number[ NUMBER_LENGTH ];
-    FOR0( subscriber, NSubscribers ) {
+    REPEAT_FOR( NSubscribers ) {
         scanf( "%s", number );
         fprintf( numbersList, "%s\n", number );
         remove( number ); // Clean up old data.
@@ -62,7 +62,7 @@ void outputSubscriberCalls( char *subscriber ) {
 void outputCalls( int NSubscribers ) {
     FILE *numbersList = openFile( "numbers.txt", "r" );
     char subscriber[ NUMBER_LENGTH ];
-    FOR0( i, NSubscribers ) {
+    REPEAT_FOR( NSubscribers ) {
         fscanf( numbersList, "%s\n", subscriber );
 
         printf( "Subscriber %s received the following calls:\n", subscriber );
