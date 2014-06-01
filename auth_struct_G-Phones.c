@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define REPEAT_FOR( times ) int i; for ( i = 0; i < limit; i++ )
+#define REPEAT_FOR( times ) int i; for ( i = 0; i < times; i++ )
 #define NUMBER_LENGTH 10
 
 FILE *openFile( char *filename, char *mode ) {
