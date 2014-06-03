@@ -1,79 +1,129 @@
+// Developer Evangelos 'bugos' Mamalakis
+// A showcase of basic file and string handling in C.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
+// STRINGIFY allows us to use a macro as string width in scanf.
+// http://stackoverflow.com/questions/3301294/scanf-field-lengths-using-a-variable-macro-c-c
+#define STRINGIFY(x) STRINGIFY2(x)
+#define STRINGIFY2(x) #x
+#define BOOL char
+#define TRUE 1
+#define FALSE 0
 #define REPEAT_FOR( times ) int i; for ( i = 0; i < times; i++ )
-#define NUMBER_LENGTH 10
+
+#define SUBSCRIBER_LIST "numbers.txt"
+#define PHONE_LENGTH 10
+typedef char PhoneString[ PHONE_LENGTH + 1 ];
+typedef long long int PhoneInt; // The problem description specifies that the caller is of type long long int.
+
+int NSubscribers; // FEAT: NSubscribers is not needed as we cand detect EOF of SUBSCRIBER_LIST.
 
 FILE *openFile( char *filename, char *mode ) {
     FILE *file = fopen( filename, mode );
     if ( file == NULL ) {
-        exit( 0 );
+        printf( "ERROR: Unable to open %s as %s", filename, mode );
+        exit( 1 );
     }
     return file;
 }
-int inputSubscribersToFile() {
-    FILE *numbersList = openFile( "numbers.txt", "w" );
+int inputPhoneString( PhoneString number ) {
+    do { // Read exactly PHONE_LENGTH digits discarding the remaining chars to a newline.
+        scanf( "%" STRINGIFY( PHONE_LENGTH ) "s" "%*[^\n]", number );
+    } while ( 0 != strcmp( "0", number ) && PHONE_LENGTH != strlen( number ) );
+}
+void inputPhoneInt( PhoneInt *number ) {
+    do { // Read exactly PHONE_LENGTH digits discarding the remaining chars to a newline.
+        scanf( "%" STRINGIFY( PHONE_LENGTH ) "lld" "%*[^\n]", number );
+    } while ( *number < pow( 10, PHONE_LENGTH - 1 ) );
+}
+void inputSubscribersToFile() {
+    FILE *subscriberList = openFile( SUBSCRIBER_LIST, "w" );
 
-    int NSubscribers;
-    printf( "Insert the number of the subscribers.\n" );
+    printf( "Insert the number of the subscribers: " );
     scanf( "%d", &NSubscribers );
 
-    printf( "Insert %d subscriber numbers.\n", NSubscribers );
-    char number[ NUMBER_LENGTH ];
+    PhoneString newSubscriber;
     REPEAT_FOR( NSubscribers ) {
-        scanf( "%s", number );
-        fprintf( numbersList, "%s\n", number );
-        remove( number ); // Clean up old data.
+        printf( "Insert a valid subscriber number: " );
+        inputPhoneString( newSubscriber ); // BUG: 0 passes from here.
+        fprintf( subscriberList, "%s\n", newSubscriber );
+        remove( newSubscriber ); // Clean up old data.
     }
-    fclose( numbersList );
-    return NSubscribers;
+
+    fclose( subscriberList );
+}
+BOOL isSubscriber( PhoneString number ) {
+    FILE *subscriberList = openFile( SUBSCRIBER_LIST, "r" );
+    PhoneString subscriber;
+    BOOL found = FALSE;
+    REPEAT_FOR( NSubscribers ) {
+        fscanf( subscriberList, "%s\n", subscriber );
+        if ( 0 == strcmp( subscriber, number ) ) {
+            found = TRUE;
+            break;
+        }
+    }
+
+    fclose( subscriberList );
+    return found;
 }
 void inputCallsToFiles() {
-    FILE *recipientCallList;
-    char recipient[ NUMBER_LENGTH ];
-    long long int caller; // The specification requires a long long int.
-    while( 1 ) {
-        printf( "Insert the subscriber's number.\n" );
-        scanf( "%s", recipient );
-        if ( !strcmp( "0", recipient ) ) {
+    FILE *subscriberCallLog;
+    PhoneString recipient;
+    PhoneInt caller;
+    while( TRUE ) {
+        printf( "Insert the recipient's number: " );
+        inputPhoneString( recipient );
+        if ( 0 == strcmp( "0", recipient ) ) {
             break; // Stop when we get 0 as a recipient.
         }
-        printf( "Insert the callers number.\n" );
-        scanf( "%lld", &caller );
+        if ( !isSubscriber( recipient ) ) {
+            printf( "The number you entered does not belong to a subscriber. Try again.\n" );
+            continue;
+        }
 
-        recipientCallList = openFile( recipient, "a" );
-        fprintf( recipientCallList, "%lld\n", caller );
-        fclose( recipientCallList );
+        printf( "Insert the callers number: " );
+        inputPhoneInt( &caller );
+
+        subscriberCallLog = openFile( recipient, "a" );
+        fprintf( subscriberCallLog, "%lld\n", caller );
+
+        fclose( subscriberCallLog );
     }
 }
 void outputSubscriberCalls( char *subscriber ) {
     FILE *subscriberCallLog = openFile( subscriber, "r" );
-    long long int caller;
+    PhoneInt caller;
     while ( !feof( subscriberCallLog ) ) {
         int readArgs = fscanf( subscriberCallLog, "%lld", &caller );
-
-        if ( readArgs == 1 ) { // fscanf was successful
-            printf( "%lld\n", caller );
+        if ( 1 != readArgs ) { // fscanf reached eof.
+            continue;
         }
+        printf( "%lld\n", caller );
     }
+
     fclose( subscriberCallLog );
 }
-void outputCalls( int NSubscribers ) {
-    FILE *numbersList = openFile( "numbers.txt", "r" );
-    char subscriber[ NUMBER_LENGTH ];
+void outputCalls() {
+    FILE *subscriberList = openFile( "numbers.txt", "r" );
+    PhoneString subscriber;
     REPEAT_FOR( NSubscribers ) {
-        fscanf( numbersList, "%s\n", subscriber );
+        fscanf( subscriberList, "%s\n", subscriber );
 
         printf( "Subscriber %s received the following calls:\n", subscriber );
         outputSubscriberCalls( subscriber );
     }
-    fclose( numbersList );
+
+    fclose( subscriberList );
 }
 int main() {
-    int NSubscribers = inputSubscribersToFile();
+    inputSubscribersToFile();
     inputCallsToFiles();
-    outputCalls( NSubscribers );
+
+    outputCalls();
     return 0;
 }
 /*
