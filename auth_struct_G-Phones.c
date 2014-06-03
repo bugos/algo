@@ -5,21 +5,18 @@
 #include <string.h>
 #include <math.h>
 
-// STRINGIFY allows us to use a macro as string width in scanf.
+// STRINGIFY enables the use of a macro as a string.
 // http://stackoverflow.com/questions/3301294/scanf-field-lengths-using-a-variable-macro-c-c
 #define STRINGIFY(x) STRINGIFY2(x)
 #define STRINGIFY2(x) #x
 #define BOOL char
-#define TRUE 1
 #define FALSE 0
-#define REPEAT_FOR( times ) int i; for ( i = 0; i < times; i++ )
+#define TRUE 1
 
 #define SUBSCRIBER_LIST "numbers.txt"
 #define PHONE_LENGTH 10
 typedef char PhoneString[ PHONE_LENGTH + 1 ];
 typedef long long int PhoneInt; // The problem description specifies that the caller is of type long long int.
-
-int NSubscribers; // FEAT: NSubscribers is not needed as we cand detect EOF of SUBSCRIBER_LIST.
 
 FILE *openFile( char *filename, char *mode ) {
     FILE *file = fopen( filename, mode );
@@ -30,7 +27,7 @@ FILE *openFile( char *filename, char *mode ) {
     return file;
 }
 int inputPhoneString( PhoneString number ) {
-    do { // Read exactly PHONE_LENGTH digits discarding the remaining chars to a newline.
+    do { // Read exactly PHONE_LENGTH digits (or 0) discarding the remaining chars to a newline.
         scanf( "%" STRINGIFY( PHONE_LENGTH ) "s" "%*[^\n]", number );
     } while ( 0 != strcmp( "0", number ) && PHONE_LENGTH != strlen( number ) );
 }
@@ -41,32 +38,29 @@ void inputPhoneInt( PhoneInt *number ) {
 }
 void inputSubscribersToFile() {
     FILE *subscriberList = openFile( SUBSCRIBER_LIST, "w" );
-
-    printf( "Insert the number of the subscribers: " );
-    scanf( "%d", &NSubscribers );
-
     PhoneString newSubscriber;
-    REPEAT_FOR( NSubscribers ) {
+    printf( "Enter the subscriber numbers. Enter 0 to continue.\n" );
+    while ( TRUE ) {
         printf( "Insert a valid subscriber number: " );
-        inputPhoneString( newSubscriber ); // BUG: 0 passes from here.
+        inputPhoneString( newSubscriber );
+        if ( 0 == strcmp( "0", newSubscriber ) ) {
+            break; // Stop when we get 0 as a new subsciber.
+        }
         fprintf( subscriberList, "%s\n", newSubscriber );
-        remove( newSubscriber ); // Clean up old data.
+        remove( newSubscriber ); // Clean up any old data.
     }
-
     fclose( subscriberList );
 }
 BOOL isSubscriber( PhoneString number ) {
     FILE *subscriberList = openFile( SUBSCRIBER_LIST, "r" );
     PhoneString subscriber;
     BOOL found = FALSE;
-    REPEAT_FOR( NSubscribers ) {
-        fscanf( subscriberList, "%s\n", subscriber );
+    while ( 1 == fscanf( subscriberList, "%s\n", subscriber ) ) {
         if ( 0 == strcmp( subscriber, number ) ) {
             found = TRUE;
             break;
         }
     }
-
     fclose( subscriberList );
     return found;
 }
@@ -84,39 +78,29 @@ void inputCallsToFiles() {
             printf( "The number you entered does not belong to a subscriber. Try again.\n" );
             continue;
         }
-
         printf( "Insert the callers number: " );
         inputPhoneInt( &caller );
 
         subscriberCallLog = openFile( recipient, "a" );
         fprintf( subscriberCallLog, "%lld\n", caller );
-
         fclose( subscriberCallLog );
     }
 }
 void outputSubscriberCalls( char *subscriber ) {
     FILE *subscriberCallLog = openFile( subscriber, "r" );
     PhoneInt caller;
-    while ( !feof( subscriberCallLog ) ) {
-        int readArgs = fscanf( subscriberCallLog, "%lld", &caller );
-        if ( 1 != readArgs ) { // fscanf reached eof.
-            continue;
-        }
+    while ( 1 == fscanf( subscriberCallLog, "%lld", &caller ) ) {
         printf( "%lld\n", caller );
     }
-
     fclose( subscriberCallLog );
 }
 void outputCalls() {
-    FILE *subscriberList = openFile( "numbers.txt", "r" );
+    FILE *subscriberList = openFile( SUBSCRIBER_LIST, "r" );
     PhoneString subscriber;
-    REPEAT_FOR( NSubscribers ) {
-        fscanf( subscriberList, "%s\n", subscriber );
-
-        printf( "Subscriber %s received the following calls:\n", subscriber );
+    while ( 1 == fscanf( subscriberList, "%s\n", subscriber ) ) {
+        printf( "Subscriber %s received calls from the following numbers:\n", subscriber );
         outputSubscriberCalls( subscriber );
     }
-
     fclose( subscriberList );
 }
 int main() {
