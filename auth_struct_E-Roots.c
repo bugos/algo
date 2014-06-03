@@ -1,9 +1,7 @@
 #include <stdio.h>
-#include <math.h>
-#include <assert.h>
-#include <time.h>
 #include <stdlib.h>
-#include <string.h>
+#include <time.h>
+#include <math.h>
 
 #define PRECISION 1e-8
 #define FAILURE -1
