@@ -10,6 +10,7 @@
 #define TRUE  1
 #define BOOL char
 #define FOR0( var, limit ) int var; for( var = 0; var < limit; var++ )
+#define REPEAT_FOR( times ) FOR0( i, times )
 
 #define MAXN 50
 #define UNDEFINED -1
@@ -23,8 +24,8 @@ void inputGraph() {
     scanf( "%d %d", &NCities, &NRoads );
     assert( NCities < MAXN
          && NRoads  < pow( MAXN, 2 ) );
-    assert( NRoads == NCities * (NCities - 1) / 2 ) // Complete Graph
-    FOR0( i, NRoads ) {
+    assert( NRoads == NCities * (NCities - 1) / 2 ); // Complete Graph
+    REPEAT_FOR( NRoads ) {
         static int city1, city2, length;
         scanf( "%d %d %d", &city1, &city2, &length );
         assert( city1 < NCities
