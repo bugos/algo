@@ -3,55 +3,47 @@
 
 #define FOR0( var, limit ) int var; for ( var = 0; var < limit; var++ )
 #define NO_VIOLATION 0
-const double CATEGORIES[] = { 1, 1.1, 1.2, 1.3 };
+const double CATEGORY_LIMITS[] = { 1, 1.1, 1.2 };
 
-int *allocateInt( int length ) {
-    int *memory = malloc( length * sizeof( int ) );
+void *allocate( int length, int size, const char* callerName ) {
+#define allocate( a,b ) allocate( a,b, __FUNCTION__ )
+    void *memory = malloc( length * size );
     if ( memory == NULL ) {
-        exit( 0 );
+        printf( "%s() failed to allocate %d %d-sized parts of memory.\n", callerName, length, size );
+        exit( 1 );
     }
     return memory;
 }
-int **allocateIntPointer( int length ) {
-    int **memory = malloc( length * sizeof( int * ) );
-    if ( memory == NULL ) {
-        exit( 0 );
-    }
-    return memory;
-}
-int **allocateInt2D( int rows, int *columns ) {
-    int **memory = allocateIntPointer( rows );
-    FOR0( row, rows ) {
-        memory[ row ] = allocateInt( columns[ row ] );
-    }
-    return memory;
-}
-int *inputInt( int length ) {
-    int *array = allocateInt( length );
+int *inputInts( char *message, int length ) {
+    int *array = allocate( length, sizeof *array );
+    printf( message, length );
     FOR0( i, length ) {
         scanf( "%d", &array[ i ] );
     }
     return array;
 }
-int **inputInt2D( int rows, int *columns ) {
-    int **array = allocateInt2D( rows, columns );
+int **inputInts2D( char *message, char *rowMessage, int rows, int *columns ) {
+    int **array = allocate( rows, sizeof *array );
+    printf( message, rows );
     FOR0( row, rows ) {
-        FOR0( column, columns[ row ] ) {
-            scanf( "%d", &array[ row ][ column ] );
-        }
+        array[ row ] = allocate( columns[ row ], sizeof **array );
+        array[ row ] = inputInts( rowMessage, columns[ row ] );
     }
     return array;
 }
 int findPenalty( int speed, int limit ) {
-    FOR0( i, sizeof( CATEGORIES ) / sizeof( int ) ) {
-        if ( speed <= CATEGORIES[ i ] * limit ) {
-            return i;
+    int NCategories = sizeof CATEGORY_LIMITS / sizeof( int );
+    FOR0( category, NCategories ) {
+        if ( speed <= CATEGORY_LIMITS[ category ] * limit ) {
+            return category;
         }
     }
+    return NCategories;
 }
 int **penalty( int **speed, int *limit, int NCameras, int *NCars ) {
-    int **violation = allocateInt2D( NCameras, NCars );
+    int **violation = allocate( NCameras, sizeof *violation );
     FOR0( camera, NCameras ) {
+        violation[ camera ] = allocate( NCars[ camera ], sizeof **violation );
         FOR0( car, NCars[ camera ] ) {
             violation[ camera ][ car ] = findPenalty( speed[ camera ][ car ], limit[ camera ] );
         }
@@ -62,7 +54,7 @@ void printViolators( int **number, int **speed, int **violation, int NCameras, i
     FOR0( camera, NCameras ) {
         FOR0( car, NCars[ camera ] ) {
             if ( violation[ camera ][ car ] != NO_VIOLATION ) {
-                printf( "Car %2d was driving over speed limit at %3d km/h and commited a type %d violation.\n",
+                printf( "Car #%04d was driving over speed limit at %3d km/h and commited a type %d violation.\n",
                     number[ camera ][ car ],
                     speed[ camera ][ car ],
                     violation[ camera ][ car ] );
@@ -72,11 +64,20 @@ void printViolators( int **number, int **speed, int **violation, int NCameras, i
 }
 int main(void) {
     int NCameras;
+    printf( "Enter the number of the cameras: " );
     scanf( "%d", &NCameras );
-    int *limit = inputInt( NCameras );
-    int *NCars = inputInt( NCameras );
-    int **speed = inputInt2D( NCameras, NCars );
-    int **number = inputInt2D( NCameras, NCars );
+    int *limit = inputInts( "Enter the limits for %d cameras:\n", NCameras );
+    int *NCars = inputInts( "Enter the number of cars for %d cameras:\n", NCameras );
+    int **speed = inputInts2D(
+        "Enter the speeds of the cars for %d cameras.\n",
+        "Enter the speeds for camera %d:\n",
+        NCameras, NCars
+    );
+    int **number = inputInts2D(
+        "Enter the registration numbers of the cars for each camera.\n",
+        "Enter the registration numbers for camera %d:\n",
+        NCameras, NCars
+    );
 
     int **violation = penalty( speed, limit, NCameras, NCars );
 
