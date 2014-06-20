@@ -10,11 +10,9 @@
 
 #define MAXN 100
 #define DIMENSIONS 3
-#define RED 2
-#define YELLOW 1
-#define GREEN 0
 #define SELF airplanes[ 0 ]
 
+enum alarmColor { GREEN, YELLOW, RED };
 typedef struct Airplane {
 	char id[ 10 + 1 ];
 	int coordinates[ DIMENSIONS ];
@@ -39,19 +37,18 @@ void inputAirplanes( int start, int NPlanes, Airplane airplanes[] ) {
 		}
 	}
 }
-int alarm( Airplane a, Airplane b, double safeDistance, double *distance ) {
-	double dist = airplaneDistance( a, b );
-	*distance = dist; // also return distance
-	if( dist <= 0.75 * safeDistance )
+enum alarmColor alarm( Airplane a, Airplane b, double safeDistance, double *distance ) {
+	*distance = airplaneDistance( a, b );
+	if( *distance <= 0.75 * safeDistance )
 		return RED;
-	if( dist <= safeDistance )
+	if( *distance <= safeDistance )
 		return YELLOW;
 	return GREEN;
 }
 void checkForAlarms( int NPlanes, Airplane airplanes[], double safeDistance ) {
 	FOR( plane, 1, NPlanes ) {
-		double dist;
-		switch( alarm( SELF, airplanes[ plane ], safeDistance, &dist ) ) {
+		double distance;
+		switch( alarm( SELF, airplanes[ plane ], safeDistance, &distance ) ) {
 			case GREEN:
 				break;
 			case YELLOW:
@@ -61,7 +58,7 @@ void checkForAlarms( int NPlanes, Airplane airplanes[], double safeDistance ) {
 				printf( "Κόκκινος Συναγερμός: " );
 				break;
 		}
-		printf( "Plane %s is located %lf meters away\n", airplanes[ plane ].id, dist );
+		printf( "Plane %s is located %lf meters away\n", airplanes[ plane ].id, distance );
 	}
 }
 BOOL atAirport( Airplane plane ) {
