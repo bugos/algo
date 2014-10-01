@@ -2,6 +2,7 @@
 // A showcase of basic file and string handling in C.
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -9,16 +10,13 @@
 // http://stackoverflow.com/questions/3301294/scanf-field-lengths-using-a-variable-macro-c-c
 #define STRINGIFY(x) STRINGIFY2(x)
 #define STRINGIFY2(x) #x
-#define BOOL char
-#define FALSE 0
-#define TRUE 1
 
 #define SUBSCRIBER_LIST "numbers.txt"
 #define PHONE_LENGTH 10
 typedef char PhoneString[ PHONE_LENGTH + 1 ];
 typedef long long int PhoneInt; // The problem description specifies that the caller is of type long long int.
 
-FILE *openFile( char *filename, char *mode ) {
+FILE *openFile( const char *filename, const char *mode ) {
     FILE *file = fopen( filename, mode );
     if ( file == NULL ) {
         printf( "ERROR: Unable to open %s as %s", filename, mode );
@@ -26,7 +24,7 @@ FILE *openFile( char *filename, char *mode ) {
     }
     return file;
 }
-int inputPhoneString( PhoneString number ) {
+void inputPhoneString( PhoneString number ) {
     do { // Read exactly PHONE_LENGTH digits (or 0) discarding the remaining chars to a newline.
         scanf( "%" STRINGIFY( PHONE_LENGTH ) "s" "%*[^\n]", number );
     } while ( 0 != strcmp( "0", number ) && PHONE_LENGTH != strlen( number ) );
@@ -40,7 +38,7 @@ void inputSubscribersToFile() {
     FILE *subscriberList = openFile( SUBSCRIBER_LIST, "w" );
     PhoneString newSubscriber;
     printf( "Enter the subscriber numbers. Enter 0 to continue.\n" );
-    while ( TRUE ) {
+    while ( true ) {
         printf( "Insert a valid subscriber number: " );
         inputPhoneString( newSubscriber );
         if ( 0 == strcmp( "0", newSubscriber ) ) {
@@ -51,13 +49,13 @@ void inputSubscribersToFile() {
     }
     fclose( subscriberList );
 }
-BOOL isSubscriber( PhoneString number ) {
+bool isSubscriber( const PhoneString number ) {
     FILE *subscriberList = openFile( SUBSCRIBER_LIST, "r" );
     PhoneString subscriber;
-    BOOL found = FALSE;
+    bool found = false;
     while ( 1 == fscanf( subscriberList, "%s\n", subscriber ) ) {
         if ( 0 == strcmp( subscriber, number ) ) {
-            found = TRUE;
+            found = true;
             break;
         }
     }
@@ -68,7 +66,7 @@ void inputCallsToFiles() {
     FILE *subscriberCallLog;
     PhoneString recipient;
     PhoneInt caller;
-    while( TRUE ) {
+    while( true ) {
         printf( "Insert the recipient's number: " );
         inputPhoneString( recipient );
         if ( 0 == strcmp( "0", recipient ) ) {
@@ -78,7 +76,7 @@ void inputCallsToFiles() {
             printf( "The number you entered does not belong to a subscriber. Try again.\n" );
             continue;
         }
-        printf( "Insert the callers number: " );
+        printf( "Insert the caller's number: " );
         inputPhoneInt( &caller );
 
         subscriberCallLog = openFile( recipient, "a" );
@@ -86,7 +84,7 @@ void inputCallsToFiles() {
         fclose( subscriberCallLog );
     }
 }
-void outputSubscriberCalls( char *subscriber ) {
+void outputSubscriberCalls( const char *subscriber ) {
     FILE *subscriberCallLog = openFile( subscriber, "r" );
     PhoneInt caller;
     while ( 1 == fscanf( subscriberCallLog, "%lld", &caller ) ) {

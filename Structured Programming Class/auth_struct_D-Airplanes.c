@@ -1,13 +1,10 @@
 // Developer Evangelos 'bugos' Mamalakis
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define FOR( var, start, end ) int var; for( var = start; var < end; var++ )
 #define FOR0( var, end ) FOR( var, 0, end )
-#define BOOL char
-#define TRUE 1
-#define FALSE 0
-
 #define MAXN 100
 #define DIMENSIONS 3
 #define SELF airplanes[ 0 ]
@@ -61,13 +58,13 @@ void checkForAlarms( int NPlanes, Airplane airplanes[], double safeDistance ) {
 		printf( "Plane %s is located %lf meters away\n", airplanes[ plane ].id, distance );
 	}
 }
-BOOL atAirport( Airplane plane ) {
+bool atAirport( Airplane plane ) {
 	FOR0( dim, DIMENSIONS ) {
 		if ( plane.coordinates[ dim ] != 0 ) {
-			return FALSE;
+			return false;
 		}
 	}
-	return TRUE;
+	return true;
 }
 int main() {
 	int NPlanes;
@@ -76,7 +73,7 @@ int main() {
 	scanf( "%lf", &safeDistance );
 	Airplane airplanes[ MAXN ];
 	inputAirplaneIds( NPlanes, airplanes );
-	while( TRUE ) {
+	while( true ) {
 		inputAirplanes( 0, 1, airplanes );
 		if( atAirport( SELF ) ) {
 			break;

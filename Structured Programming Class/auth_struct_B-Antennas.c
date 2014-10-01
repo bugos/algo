@@ -1,18 +1,15 @@
 // Developer Evangelos 'bugos' Mamalakis
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define FOR0( var, limit ) int var; for( var = 0; var <  limit; var++ )
 #define FOR1( var, limit ) int var; for( var = 1; var <= limit; var++ )
-#define BOOL char
-#define TRUE 1
-#define FALSE 0
-
 #define NMAX 50
 struct Point {
 	int x, y;
 	int code;
-	BOOL deleted;
+	bool deleted;
 } A[ NMAX ], B[ NMAX ];
 double minDist;
 int Na, Nb;
@@ -52,13 +49,13 @@ void removeInterfering() {
 				continue;
 			}
 			if( pointDistanceSquared( A[ a ], B[ b ] ) <= minDist ) {
-				A[ a ].deleted = TRUE;
-				B[ b ].deleted = TRUE;
+				A[ a ].deleted = true;
+				B[ b ].deleted = true;
 			}
 		}
 	}	
 }
-void printOffer( int N, struct Point p[], char *name ) {
+void printOffer( const int N, const struct Point p[], const char *name ) {
 	printf( "Offer %s after removing the interfering points: \n", name );
 	FOR0( i, N ) {
 		if( !p[ i ].deleted ) {

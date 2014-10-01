@@ -5,10 +5,8 @@
 #include <math.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdbool.h>
 
-#define FALSE 0
-#define TRUE  1
-#define BOOL char
 #define FOR0( var, limit ) int var; for( var = 0; var < limit; var++ )
 #define REPEAT_FOR( times ) FOR0( i, times )
 
