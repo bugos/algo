@@ -1,9 +1,7 @@
 import sys
+from itertools import islice
 sys.stdin = open('Test_0_s_0.in')
 sys.stdout = open('Test_0_s_0.out.txt', 'w')
-
-def getInts():
-    return list(map(int, input().split()))
 
 def cons(array):
     count = 1
@@ -18,16 +16,25 @@ def cons(array):
             
     return max(maximum, count)
 
-if __name__ == "__main__":
-    length, queries = getInts()
+def getInts():
+    return [int(n) for n in fin.readline().split()]
+
+def main():
+    length, Nqueries = getInts()
 
     array = getInts()
+    assert len(array) == length
+    
     print("Initial array: {}".format(cons(array)))
 
-    for query, line in enumerate(sys.stdin, 1):
+    queries = islice(fin, Nqueries)
+    for query, line in enumerate(queries, 1):
         x, y = map(int, line.split())
         array[x] = y
         print("Change #{}: {}".format(query, cons(array)))
 
-    sys.stdout.flush()
     
+if __name__ == "__main__":
+    with sys.stdin as fin:
+        with sys.stdout as fout:
+            main()
