@@ -1,37 +1,40 @@
-#Note: make sure wordlist and input files end with a newline.
-
 import sys
-from bisect import insort
+from bisect import bisect_left
+from itertools import islice
 
-wordlist = list(open('dictionary.txt'))
-sys.stdin = open('Test_1_s_0.in')
-#sys.stdout = open('Test_1_s_0.out.txt', 'w')
-
-wordlist.sort()
-
-def cost(word):
-    minimum = len(word) #minimum cost
+def cost(word, wordlist):
+    try:
+        index = wordlist.index(word)
+    except ValueError:
+        return len(word) + 1
+    
     current = 0 #current letter = current cost
+    minimum = len(word) #minimum cost
+
     while current < minimum: #possible to find a new minimum
         #get cost to select word from current position
-        l = wordlist.copy()
-        w = word[:current]
-        
-        insort(l, w)
+        w = word[:current]       
+        i = bisect_left(wordlist, w)
 
-        index = wordlist.index(word)
-        i = l.index(w)
-
-        select = index - i
-        
+        select = (index + 1) - i
+        #print(w, i, select, minimum)
         minimum = min(minimum, current + select)
         current = current + 1
     return minimum
 
-if __name__ == "__main__":
-    
-    cases = int(input())
+def main():
+    nCases = int(fin.readline())
+    cases = (c.strip() for c in islice(fin, nCases))
 
-    for case, word in enumerate(sys.stdin, 1):
-        print("Case #{}: {}".format(case, cost(word)))        
-    assert(case == cases)
+    wordlist = [w.strip() for w in fwordlist]
+    wordlist.sort()
+    
+    for case, word in enumerate(cases, 1):
+        fout.write("Case #{}: {}\n".format(case, cost(word, wordlist)))        
+    
+if __name__ == "__main__":
+    with open('Test_1_0_0.in') as fin:
+        with sys.stdout as fout:
+        #with open('Test_1_0_0.out', 'w') as fout:
+            with open('dictionary_small.txt') as fwordlist:
+                main()
