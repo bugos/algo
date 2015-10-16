@@ -4,6 +4,7 @@
 #define FOR0( var, limit ) int var; for( var = 0; var <  limit; var++ )
 #define FOR( var, start, end ) int var; for( var = start; var < end; var++ )
 
+#define MAX_WORD_LENGTH 20
 #define hangmanImageSize 40
 char hangmanImage[] = 
 "++----\n"
@@ -25,9 +26,58 @@ void hangman( int n ) {
 }
 
 int main() {
-	// your code goes here
-	FOR0( i, 7 ) {
-		hangman(i);
+	int misses = 0;
+	int found = 0;
+	int wordLength;
+	char word[MAX_WORD_LENGTH+1];
+	char asterisks[MAX_WORD_LENGTH+1];
+	char letter;
+	char *match;
+	int matchPos;
+	
+	printf( "Type a word: " );
+	scanf("%20s", word);
+	wordLength = strlen(word);
+	
+	strcpy( asterisks, word );
+	memset (asterisks, '*', wordLength);
+	
+	FOR0( _, 24 ) printf("\n"); //clear screen 
+	hangman(0);
+	printf( asterisks );
+	printf("\n");
+	
+	while( misses < NHangmanParts && found < wordLength ) {
+		printf("Provide a letter: ");
+		scanf(" %c", &letter);
+		
+		matchPos = -1; // No match
+		while ( match = strchr( word, letter ) ) {
+			matchPos = match - word;
+			asterisks[ matchPos ] = word[ matchPos ];
+			found++;
+			
+		}
+		if ( matchPos == -1 ) { //missed 
+			misses++;
+			printf("Ooops...\n");
+		}
+		else {
+			printf("Bravo!\n");
+		}
+		
+		hangman(misses);
+		printf( asterisks );
+		printf( "\n" );
+		
 	}
+	
+	if ( matchPos == -1 ) { // Lost 
+		printf("You are hanged!\n");
+	}
+	else { // Won
+		printf("Congatulations, you are free!\n");
+	}
+	
 	return 0;
 }
