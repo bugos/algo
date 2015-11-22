@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <functional>
 using namespace std;
 
 class Crypto {
@@ -7,10 +8,21 @@ protected:
 	string message;
 	string encrypted;
 	string decrypted;
+
+	// Applies func to original char-by-char
+	void charEncryption( string &result, const string &original, function<char (char)> func ) {
+		result.resize( original.length() );
+		for ( int i = 0; i < original.length(); i++ ) {
+			result[i] = func( original[i] );
+		}
+	}
+
 public:
 	void virtual Encryption() = 0;
 	void virtual Decryption() = 0;
+
 	Crypto( const string msg ) : message( msg ) {}
+
 	string getMessage() {
 		return message;
 	}
@@ -26,20 +38,18 @@ public:
 };
 
 class Cesar: public Crypto {
-	static int const key = 1;
 public:
-	Cesar( const string msg ) : Crypto(msg) {}
+	int key;
+	Cesar( const string msg ) : Crypto(msg), key(1) {}
 	void virtual Encryption() {
-		encrypted.resize( message.length() );
-		for ( int i = 0; i < message.length(); i++ ) {
-			encrypted[i] = message[i] + key;
-		}
+		charEncryption( encrypted, message, [this]( char c ) {
+			return c + key;
+		});
 	}
 	void virtual Decryption() {
-		decrypted.resize( encrypted.length() );
-		for ( int i = 0; i < encrypted.length(); i++ ) {
-			decrypted[i] = encrypted[i] - key;
-		}
+		charEncryption( decrypted, encrypted, [this]( char c ) {
+			return c - key;
+		});
 	}
 };
 
@@ -48,17 +58,16 @@ class XOR: public Crypto {
 public:
 	char key;
 	XOR( const string msg ) : Crypto(msg), key('k') {}
+
 	void virtual Encryption() {
-		encrypted.resize( message.length() );
-		for ( int i = 0; i < message.length(); i++ ) {
-			encrypted[i] = (char)message[i] ^ key;
-		}
+		charEncryption( encrypted, message, [this]( char c ) {
+			return c ^ key;
+		});
 	}
 	void virtual Decryption() {
-		decrypted.resize( encrypted.length() );
-		for ( int i = 0; i < encrypted.length(); i++ ) {
-			decrypted[i] = encrypted[i] ^ key;
-		}
+		charEncryption( decrypted, encrypted, [this]( char c ) {
+			return c ^ key;
+		});
 	}
 };
 
