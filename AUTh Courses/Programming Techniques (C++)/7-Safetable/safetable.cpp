@@ -11,11 +11,11 @@ private :
 
 public:
 	Safetable(int x = 10) : size(x) {
-		array = new int[size];
+		array = new int[size](); //allocate and initialize
 	}
 	int &operator[]( int i ) {
 		if ( i >= size ) {
-			throw new ArrayOutofBoundException();
+			throw ArrayOutofBoundException();
 		}
 		return array[i];
 	}
