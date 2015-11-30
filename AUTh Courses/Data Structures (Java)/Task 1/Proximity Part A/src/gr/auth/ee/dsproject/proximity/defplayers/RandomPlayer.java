@@ -67,21 +67,20 @@ public class RandomPlayer implements AbstractPlayer {
 	}
 	
 	public static int[][] getNeighborsCoordinates(Board board, int x, int y) {
-		int xOdd = x & 1; // Check if x is odd
+		int yOdd = y & 1; // Check if x is odd
 		
-		// When x is even xOdd=0 and we get even table
-		// When x is odd  xOdd=1 and we get Odd table.
+		// When y is even yOdd=0 and we get Even table
+		// When y is odd  yOdd=1 and we get Odd table.
 		int res[][] = new int[][]{
 			{x+1,      y},
-			{x  +xOdd, y+1},
-			{x-1+xOdd, y+1},
+			{x  +yOdd, y+1},
+			{x-1+yOdd, y+1},
 			{x-1,      y},
-			{x-1+xOdd, y-1},
-			{x  +xOdd, y-1}
+			{x-1+yOdd, y-1},
+			{x  +yOdd, y-1}
 		};
 		
 		for ( int i = 0; i < res.length; i++ ) {
-			//if ( res[i][0] < 0 || res[i][1] < 0 || "..." ) {
 			if ( !board.isInsideBoard( res[i][0], res[i][1 ] ) ) {
  				res[i][0] = res[i][1] = -1;
 			}
