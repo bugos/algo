@@ -13,13 +13,13 @@ public:
 class Employee {
 private:
 	bool persists;
-	bool synced; // synced to file
+	bool saved; // synced to file
 
 public:
 	std::string name;
 	double salary;
 
-	Employee() : persists(), synced(), name(), salary() {}
+	Employee() : persists(), saved(), name(), salary() {}
 
 	Employee& input(std::istream& is) {
 		is >> name >> salary;
@@ -34,16 +34,16 @@ public:
 	}
 	Employee& persist() {
 		if (!persists) {
+			persists = true;
 			persistent.push_back(*this);
 		}
-		persists = true;
 		return *this;
 	}
-	Employee& sync( bool alreadySynced = false ) {
-		if (!synced && !alreadySynced) {
+	Employee& save( bool alreadySaved = false ) {
+		if (!saved && !alreadySaved) {
 				output(savefile);
 		}
-		synced = true;
+		saved = true;
 		return *this;
 	}
 
@@ -54,52 +54,40 @@ public:
 		try {
 			Employee employee;
 			bool comesFromSavefile = &is == &(std::istream&)savefile;
-			employee.input(is).sync(comesFromSavefile).persist().output(std::cout);
+			employee.input(is).save(comesFromSavefile).persist().output(std::cout);
 		}
 		catch ( ModelValidationException &e ) {
 			std::cout << e.what();
-
 			is.clear();
 		}
 	}
 	static void init() { // get employees from file
-		savefile.open(EMPL_FILENAME, std::fstream::in);
-		while (savefile.good()) {
-			if ((savefile >> std::ws).peek(), savefile.eof()) {
-				break;
-			}
+		savefile.open(EMPL_FILENAME, std::fstream::in); //must have newline at the end
+		while (savefile.good() && !((savefile >> std::ws).peek(), savefile.eof())) {
 			inputFrom(savefile);
-
 		}
 		savefile.close();
 		savefile.open(EMPL_FILENAME, std::fstream::out | std::fstream::app);
 	}
 	static double getMeanSalary() {
-		if (!persistent.size()) return 0;
 		double sum = 0;
 		for ( std::vector<Employee>::iterator it = persistent.begin() ; it != persistent.end(); ++it) {
 			sum += it->salary;
 		}
-		return sum / persistent.size();
-		// use accumulate
+		return persistent.size() ? sum / persistent.size() : 0;
 	}
-
 };
 std::fstream Employee::savefile;
 std::vector<Employee> Employee::persistent;
 
-//todo: last line error, no return.
 int main() {
 	Employee::init();
 
 	std::cout << "Please input up to 20 employees(break with !):" << std::endl;
 	#define MAX_EMPL_INPUT 20
-	for(int i = 0; i < MAX_EMPL_INPUT; i++ ) {
-		if ((std::cin >> std::ws).peek() == '!') {
-			break;
-		}
+	for(int i = 0; i < MAX_EMPL_INPUT && (std::cin >> std::ws).peek() != '!'; i++ ) {
 		Employee::inputFrom(std::cin);
 	}
 
-	std::cout << "The mean of salaries is " << Employee::getMeanSalary();
+	std::cout << "The mean of salaries is " << Employee::getMeanSalary() << std::endl;
 }
