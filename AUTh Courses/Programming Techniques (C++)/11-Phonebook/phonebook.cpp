@@ -15,6 +15,7 @@ public:
 	~PhonebookEntry() {
 		delete number;
 	}
+	PhonebookEntry(const PhonebookEntry &that) : PhonebookEntry(that.name, *(that.number)) {}
     PhonebookEntry& operator=(const PhonebookEntry& that) {
         name = that.name;
         *number = *(that.number);
@@ -56,17 +57,26 @@ int main() {
 
 	/*** Testing phonebook set ***/ 
 	std::set<PhonebookEntry, std::less<PhonebookEntry>> phonebook = {
-		PhonebookEntry("mamalakis", 50429),
-		PhonebookEntry("avgoustakis", 91205),
-		PhonebookEntry("tzanakakis", 41393)
+		PhonebookEntry("mavrokostas", 50429),
+		PhonebookEntry("samolis",     91205),
+		PhonebookEntry("skordalos",   41393),
+		PhonebookEntry("tatakis",     49305),
+		PhonebookEntry("moudakis",    95730),
+		PhonebookEntry("stavrakakis", 27497),
+		PhonebookEntry("giasafakis",  10953),
+		PhonebookEntry("petrakis",    85486),
+		PhonebookEntry("manolakis",   30572),
+		PhonebookEntry("lagoudakis",  85629),
 	};
 	std::for_each( phonebook.begin(), phonebook.end(), 
 		[](const PhonebookEntry& entry) { //doesnt work without &!
 			std::cout << entry; 
 	} );
 
-	std::set<PhonebookEntry, std::greater<PhonebookEntry>> phonebookReverse(phonebook.end(), phonebook.begin());
-	std::for_each( phonebook.begin(), phonebook.end(), 
+	//only range constructor works with different prototypes
+	std::set<PhonebookEntry, std::greater<PhonebookEntry>> phonebookReverse(phonebook.begin(), phonebook.end());
+
+	std::for_each( phonebookReverse.begin(), phonebookReverse.end(), 
 		[](const PhonebookEntry& entry) {
 			std::cout << entry; 
 	} );
