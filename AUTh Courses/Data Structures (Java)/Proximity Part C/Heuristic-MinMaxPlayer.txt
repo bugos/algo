@@ -1,2 +1,2 @@
 Heuristic-MinMaxPlayer
-907-501
+603-773

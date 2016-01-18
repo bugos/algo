@@ -36,7 +36,6 @@ public class MinMaxPlayer implements AbstractPlayer
 
   public String getName ()
   {
-
     return name;
 
   }
@@ -98,12 +97,12 @@ public class MinMaxPlayer implements AbstractPlayer
 	 */
 	private int[] chooseMinMaxMove(Node81918309 rootNode) {
 		// Get the move with the maximum evaluation
-		Node81918309 bestMove = createSubtree(rootNode, 2);
+		Node81918309 bestMove = createSubtree(rootNode, MAX_DEPTH);
 		return bestMove.getNodeMove();
 	}
 	
-	
-	static final int N_BEST_NODES_TO_EXAMINE = 2;
+	static final int MAX_DEPTH = 2;
+	static final int N_BEST_NODES_TO_EXAMINE = 6; // 45
 	/**
 	 * Recursive function. Creates the subtree for the parent node and calls itself for children up to maxDepth
 	 * @param parent
@@ -120,20 +119,23 @@ public class MinMaxPlayer implements AbstractPlayer
 			}
 		}
 		
-		ArrayList<Node81918309> nodesToExamine = parent.children;
+		ArrayList<Node81918309> nodesToExamine = parent.children; // All above nodes are appended to parent
+		if ( nodesToExamine.size() == 1 ) {
+			return nodesToExamine.get(0); // return the only available node. Game finished
+		}
 		if ( parent.nodeDepth + 1 < maxDepth ) { // check if children reached maxDepth
 			// Examine only the N_BEST_NODES_TO_EXAMINE nodes with the higher evaluation
-			Collections.sort(parent.children, Node81918309.EVALUATIONSUM_ORDER);
-			nodesToExamine = new ArrayList<Node81918309>(parent.children.subList(0, N_BEST_NODES_TO_EXAMINE));
+			Collections.sort(nodesToExamine, Node81918309.EVALUATIONSUM_ORDER_ASC);
+			Collections.reverse(nodesToExamine); // descending order
+			int limitNodesToExamine = Math.min(N_BEST_NODES_TO_EXAMINE, nodesToExamine.size());
+			nodesToExamine = new ArrayList<Node81918309>(nodesToExamine.subList(0, limitNodesToExamine - 1 ));
+			nodesToExamine.add(parent.children.get(parent.children.size() - 1));
 			for (Node81918309 node:nodesToExamine) {
 				node.setNodeEvaluationSum(node.getNodeEvaluationSum() - createSubtree(node, maxDepth).getNodeEvaluationSum());
 			}
 		}
-		Node81918309 maxMove = Collections.max(nodesToExamine, Node81918309.EVALUATIONSUM_ORDER);
-		System.out.println(parent.getNodeMove()[0] + " " + parent.getNodeMove()[1] + " " + parent.getNodeMove()[2]
-				+ " " + maxMove.getNodeMove()[0] + " " + maxMove.getNodeMove()[1] + " " + maxMove.getNodeMove()[2]
-						+ " " + parent.getNodeEvaluation() + " " + parent.getNodeEvaluationSum()
-						+ " | " + maxMove.getNodeEvaluation() + " " + maxMove.getNodeEvaluationSum());
+
+		Node81918309 maxMove = Collections.max(nodesToExamine, Node81918309.EVALUATIONSUM_ORDER_ASC);
 		return maxMove;
 	}
 	

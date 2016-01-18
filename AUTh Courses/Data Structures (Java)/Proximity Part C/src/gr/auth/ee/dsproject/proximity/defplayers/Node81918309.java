@@ -91,6 +91,7 @@ public class Node81918309 {
 		double scoreGain = 0; // points gained after this move
 		double coveredGain = 0; // vulnerability drop after this move
 		
+		scoreGain = randomNumber;
 		// safety(= maxvuln - vuln) of the candidate move tile
 		coveredGain += randomNumber - calcVulnerability(randomNumber, countEmptyNeighbours(board, tile));
 		
@@ -109,8 +110,10 @@ public class Node81918309 {
 			else { // enemy neighbor
 				if ( randomNumber > neighbor.getScore() ) {
 					scoreGain += 2 * neighbor.getScore(); // what we get plus enemy loses
-					coveredGain += randomNumber - calcVulnerability(neighbor.getScore(),
-							countEmptyNeighbours(board, neighbor)); // (~x2?) safety of the new tile
+					coveredGain += neighbor.getScore() - calcVulnerability(neighbor.getScore(),
+							countEmptyNeighbours(board, neighbor) + 1); // safety of the new tile
+					coveredGain += neighbor.getScore() - calcVulnerability(neighbor.getScore(),
+							countEmptyNeighbours(board, neighbor)); // safety lost by enemy
 				}
 				else {
 					// todo: if we don't conquer enemy, we cover him by one tile
@@ -152,7 +155,7 @@ public class Node81918309 {
 		// probability of enemy playing higher score tile 
 		// (can use getMyPool() here)
 		// values between 0 and 1
-		double enemyHigherCoef = (20 - score) / 20;
+		double enemyHigherCoef = (20 - score) / 20; // more then one tries?
 		
 		// empty neighbors coefficient
 		// values between 0 and 1
@@ -180,11 +183,16 @@ public class Node81918309 {
 		return emptyNeighbours;
 	}
 	
-	public static final Comparator<Node81918309> EVALUATIONSUM_ORDER = new evaluationComparator();
+	public static final Comparator<Node81918309> EVALUATIONSUM_ORDER_ASC = new evaluationSumComparator();
 	
-	private static class evaluationComparator implements Comparator<Node81918309> {
+	/**
+	 * Can be used to compare node objects according to their evaluationSum.
+	 * @author bugos
+	 *
+	 */
+	private static class evaluationSumComparator implements Comparator<Node81918309> {
 	    public int compare(Node81918309 move1, Node81918309 move2) {
-	    	return (int)(move1.getNodeEvaluationSum() - move2.getNodeEvaluationSum());
+	    	return Double.compare(move1.getNodeEvaluationSum(), move2.getNodeEvaluationSum());
 	    }
 	}
 

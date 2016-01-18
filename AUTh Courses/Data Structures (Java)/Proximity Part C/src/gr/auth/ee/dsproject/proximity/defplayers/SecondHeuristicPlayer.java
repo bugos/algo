@@ -141,8 +141,8 @@ public class SecondHeuristicPlayer implements AbstractPlayer {
 			else { // enemy neighbor
 				if ( randomNumber > neighbor.getScore() ) {
 					scoreGain += 2 * neighbor.getScore(); // what we get plus enemy loses
-					coveredGain += randomNumber - calcVulnerability(neighbor.getScore(),
-							countEmptyNeighbours(board, neighbor)); // (x2?) safety of the new tile
+					coveredGain += 2 * ( neighbor.getScore() - calcVulnerability(neighbor.getScore(),
+							countEmptyNeighbours(board, neighbor)) ); // (x2?) safety of the new tile
 				}
 				else {
 					// todo: if we don't conquer enemy, we cover him by one tile
@@ -151,7 +151,7 @@ public class SecondHeuristicPlayer implements AbstractPlayer {
 			}
 		}
 		
-		if (scoreGain > 0) System.out.println(tile.getX() + " " + tile.getY() + " " + randomNumber + ": " + scoreGain + " " + coveredGain);
+		//if (scoreGain > 0) System.out.println(tile.getX() + " " + tile.getY() + " " + randomNumber + ": " + scoreGain + " " + coveredGain);
 		return scoreGain + coveredGain;
 	}
 	
