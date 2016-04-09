@@ -1,4 +1,4 @@
-package gr.auth.ee.dsproject.proximity.defplayers;
+package node;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,15 +7,14 @@ import java.util.Comparator;
 import gr.auth.ee.dsproject.proximity.board.Board;
 import gr.auth.ee.dsproject.proximity.board.ProximityUtilities;
 import gr.auth.ee.dsproject.proximity.board.Tile;
-import gr.auth.ee.dsproject.proximity.defplayers.Node81918309;
-
+import gr.auth.ee.dsproject.proximity.defplayers.AbstractPlayer;
 
 /**
  * Simulates a DS-Proximity player that plays using a Min-Max algorithm
  * @author Mamalakis Evangelos <mamalakis@auth.gr> <+306970489632>
  * @author Evangelou Alexandros <alexandre@auth.com> <+306980297466>
  */
-public class MinMaxPlayer implements AbstractPlayer
+public class Player81918309 implements AbstractPlayer
 {
 
   int score;
@@ -25,7 +24,7 @@ public class MinMaxPlayer implements AbstractPlayer
   int[] nextNumbersToBePlayed; // here?absolete
   private Object root;
 
-  public MinMaxPlayer (Integer pid)
+  public Player81918309 (Integer pid)
   {
     id = pid;
     name = "MinMaxPlayer";
@@ -101,8 +100,8 @@ public class MinMaxPlayer implements AbstractPlayer
 		return bestMove.getNodeMove();
 	}
 	
-	static final int MAX_DEPTH = 4;
-	static final int N_BEST_NODES_TO_EXAMINE = 4; // 45
+	static final int MAX_DEPTH = 2;
+	static final int N_BEST_NODES_TO_EXAMINE = 6; // 45
 	/**
 	 * Recursive function. Creates the subtree for the parent node and calls itself for children up to maxDepth
 	 * @param parent

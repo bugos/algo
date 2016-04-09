@@ -1,5 +1,6 @@
-package gr.auth.ee.dsproject.proximity.defplayers;
+package node;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -151,16 +152,36 @@ public class Node81918309 {
 	 * @param emptyNeighbours The number of empty neighbors of the tile.
 	 * @return vulnerability values between 0 and score
 	 */
+	
 	private double calcVulnerability( double score, double emptyNeighbours ) {
 		// probability of enemy playing higher score tile 
 		// (can use getMyPool() here)
 		// values between 0 and 1
 		double enemyHigherCoef = (20 - score) / 20; // more then one tries?
+		//double NToCheck = 3 + emptyNeighbours;
+		
+	//	System.out.println(Arrays.toString(Board.getNextTenNumbersToBePlayed()));
+		int randomNumber, randomNumberIndex, enemyMovesLeft = 0, enemyHigherMoves = 0;
+		randomNumberIndex = nodeDepth - 1 + (2 * enemyMovesLeft + 1); //double line :(
+		do { 
+			
+			randomNumber = Board.getNextTenNumbersToBePlayed()[randomNumberIndex];
+			if (randomNumber > score) {
+				enemyHigherMoves += 1;
+			}
+			
+			enemyMovesLeft++; // the index
+			randomNumberIndex = nodeDepth - 1 + (2 * enemyMovesLeft + 1);
+		} while (randomNumber != 0 && randomNumberIndex < 9); // 0 means no moves left, 9 is the last value
+		
+		double enemyHigherCoef2 = (double)enemyHigherMoves / (double)enemyMovesLeft;
+		enemyHigherCoef = 0.3 * enemyHigherCoef + 0.7 * enemyHigherCoef2;
+		//System.out.println("" +enemyHigherCoef + " " + enemyHigherCoef2);
 		
 		
 		// empty neighbors coefficient
 		// values between 0 and 1
-		double emptyNeighboursCoef = Math.pow(emptyNeighbours / 6, 0.4);
+		double emptyNeighboursCoef = Math.pow(Math.min(emptyNeighbours, 4) / 6, 0.4);
 		
 		return  enemyHigherCoef * emptyNeighboursCoef * score;
 	}

@@ -1,4 +1,4 @@
-package gr.auth.ee.dsproject.proximity.defplayers;
+package node;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -156,7 +156,6 @@ public class Node81918309 {
 		// (can use getMyPool() here)
 		// values between 0 and 1
 		double enemyHigherCoef = (20 - score) / 20; // more then one tries?
-		
 		
 		// empty neighbors coefficient
 		// values between 0 and 1

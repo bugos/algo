@@ -1,2 +1,2 @@
 MinMaxPlayer-Heuristic
-835-544
+715-672
