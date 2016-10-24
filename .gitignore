@@ -7,3 +7,5 @@ __pycache__/
 
 # Java
 *.class
+
+.DS_Store
