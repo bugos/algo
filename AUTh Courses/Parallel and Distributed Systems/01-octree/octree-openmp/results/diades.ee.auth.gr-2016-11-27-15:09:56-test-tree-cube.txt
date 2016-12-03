@@ -1,0 +1,25 @@
+Running for 1048576 particles with maximum height: 18
+Time to compute the hash codes            : 0.022698s
+Time to compute the morton encoding       : 0.010754s
+Time for the truncated radix sort         : 0.000001s
+Time to rearrange the particles in memory : 0.006917s
+Index test FAIL
+Encoding test PASS
+Time to compute the hash codes            : 0.017371s
+Time to compute the morton encoding       : 0.007619s
+Time for the truncated radix sort         : 0.000000s
+Time to rearrange the particles in memory : 0.003359s
+Index test FAIL
+Encoding test PASS
+Time to compute the hash codes            : 0.017318s
+Time to compute the morton encoding       : 0.007633s
+Time for the truncated radix sort         : 0.000000s
+Time to rearrange the particles in memory : 0.003342s
+Index test FAIL
+Encoding test PASS
+Time to compute the hash codes            : 0.017313s
+Time to compute the morton encoding       : 0.007621s
+Time for the truncated radix sort         : 0.000000s
+Time to rearrange the particles in memory : 0.003440s
+Index test FAIL
+Encoding test PASS

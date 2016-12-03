@@ -1,0 +1,9 @@
+Running for 1048576 particles with maximum height: 18
+Time to compute the hash codes            : 0.025244s
+Time to compute the morton encoding       : 0.010634s
+Running for 2097152 particles with maximum height: 18
+Time to compute the hash codes            : 0.044702s
+Time to compute the morton encoding       : 0.021388s
+Running for 4194304 particles with maximum height: 18
+Time to compute the hash codes            : 0.088670s
+Time to compute the morton encoding       : 0.043123s

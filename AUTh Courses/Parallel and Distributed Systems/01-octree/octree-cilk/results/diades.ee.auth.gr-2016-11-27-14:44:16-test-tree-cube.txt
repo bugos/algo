@@ -1,0 +1,50 @@
+Running for 1048576 particles with maximum height: 18
+Time to compute the hash codes            : 0.012459s
+Time to compute the morton encoding       : 0.011652s
+Time for the truncated radix sort         : 0.041378s
+Time to rearrange the particles in memory : 0.032800s
+Index test PASS
+Encoding test PASS
+Time to compute the hash codes            : 0.007918s
+Time to compute the morton encoding       : 0.008472s
+Time for the truncated radix sort         : 0.036339s
+Time to rearrange the particles in memory : 0.028410s
+Index test PASS
+Encoding test PASS
+Time to compute the hash codes            : 0.008143s
+Time to compute the morton encoding       : 0.008452s
+Time for the truncated radix sort         : 0.036375s
+Time to rearrange the particles in memory : 0.029475s
+Index test PASS
+Encoding test PASS
+Time to compute the hash codes            : 0.007874s
+Time to compute the morton encoding       : 0.008443s
+Time for the truncated radix sort         : 0.036306s
+Time to rearrange the particles in memory : 0.029449s
+Index test PASS
+Encoding test PASS
+Running for 2097152 particles with maximum height: 18
+Time to compute the hash codes            : 0.024766s
+Time to compute the morton encoding       : 0.024988s
+Time for the truncated radix sort         : 0.087141s
+Time to rearrange the particles in memory : 0.073449s
+Index test PASS
+Encoding test PASS
+Time to compute the hash codes            : 0.015575s
+Time to compute the morton encoding       : 0.017170s
+Time for the truncated radix sort         : 0.085734s
+Time to rearrange the particles in memory : 0.070043s
+Index test PASS
+Encoding test PASS
+Time to compute the hash codes            : 0.013382s
+Time to compute the morton encoding       : 0.016890s
+Time for the truncated radix sort         : 0.065186s
+Time to rearrange the particles in memory : 0.051508s
+Index test PASS
+Encoding test PASS
+Time to compute the hash codes            : 0.012059s
+Time to compute the morton encoding       : 0.016669s
+Time for the truncated radix sort         : 0.065366s
+Time to rearrange the particles in memory : 0.051473s
+Index test PASS
+Encoding test PASS

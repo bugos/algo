@@ -1,0 +1,7 @@
+Usage: ./test_octree N dist pop rep P
+where
+N    : number of points
+dist : distribution code (0-cube, 1-sphere)
+pop  : population threshold
+rep  : repetitions
+L    : maximum tree height.
