@@ -7,20 +7,26 @@ public class VirtualModem {
 	int speed = 10000;
 	int timeout = 2000;
 
-	String server_name        = "ithaki";
-	String echo_request_code  = "E2649\r";
-	String image_request_code = "M2516\r";
-	String gps_request_code   = "E4541\r";
+	Modem modem;
+	String endline = "\r";
+	String imageParameters = "CAM=PTZ"; // FIX, PTZ, 01, 02, ...
+	String server_name              = "ithaki";
+	String echo_request_code        = "E1608";
+	String image_request_code       = "M5525"; 
+	String image_error_request_code = "M5525";
+	String gps_request_code         = "E4541";
 	long connection_timeout = 20000;
 	int[] start_image_delimiter = { 0xFF, 0xD8 };
 	int[] end_image_delimiter = { 0xFF, 0xD9 };
+	byte[] start_gps_delimiter = "START ITHAKI GPS TRACKING\r\n".getBytes();
+	byte[] end_gps_delimiter = "START ITHAKI GPS TRACKING\r\n".getBytes();
 	
     public static void main(String[] args) {
     	new VirtualModem().demo();
     }
     
     public void demo() {
-    	Modem modem = new Modem();
+    	modem = new Modem();
     	modem.setSpeed(speed);
     	modem.setTimeout(timeout);
     	modem.open(server_name);
@@ -28,17 +34,22 @@ public class VirtualModem {
     	//echoRequest(modem);
     	//imageRequest(modem);
     	
-    	modem.write(echo_request_code.getBytes());
-    	modem.write(image_request_code.getBytes());
-    	receiveResponse(modem);
+    	modemWrite(echo_request_code);
+    	modemWrite(image_request_code + imageParameters);
+    	modemWrite(gps_request_code);
+    	receiveResponse();
     	
     	modem.close();
     }
+    
+    private boolean modemWrite(String s) {
+    	return modem.write((s + endline).getBytes());
+    }
+    
     // NOTE : Break endless loop by catching sequence "\r\n\n\n".
     // NOTE : Stop program execution when "NO CARRIER" is detected.
     // NOTE : A time-out option will enhance program behavior.
-    // NOTE : Continue with further Java code.
-    private void receiveResponse(Modem modem) {
+    private void receiveResponse() {
     	System.out.println("#Receiving...");
     	int incoming_byte;
     	long startTime = System.currentTimeMillis(), elapsedTime, lastActiveTime = startTime;
@@ -62,20 +73,24 @@ public class VirtualModem {
 	    		
 	    		System.out.print((char) incoming_byte);
 	    		
-
+    		    if(checkDelimiter( start_image_delimiter, image_delimeter_index, incoming_byte))
+    		    	getImage();
+    		    if(checkDelimiter( start_gps_delimiter, image_delimeter_index, incoming_byte))
+    		    	//getGPS();
 	    		// Check for image
-	    		if ( start_image_delimiter[image_delimeter_index] == incoming_byte ) { // Candidate delimiter 
-	    			System.out.println("#candidate img"); 
-	    			image_delimeter_index++;
-	    		}
-	    		else { // Reset
-	    			image_delimeter_index = 0;
-	    		}
-	    		if ( image_delimeter_index == start_image_delimiter.length ) { //Confirmed delimiter
-	    			System.out.println("#confirmed img"); 
-	    			getImage(modem);
-	    		}
+//	    		if ( start_image_delimiter[image_delimeter_index] == incoming_byte ) { // Candidate delimiter 
+//	    			System.out.println("#candidate img"); 
+//	    			image_delimeter_index++;
+//	    		}
+//	    		else { // Reset
+//	    			image_delimeter_index = 0;
+//	    		}
+//	    		if ( image_delimeter_index == start_image_delimiter.length ) { //Confirmed delimiter
+//	    			System.out.println("#confirmed img"); 
+//	    			getImage(modem);
+//	    		}
 	    		lastActiveTime = System.currentTimeMillis();
+	    		
 	    		
     		}
     		catch (Exception e) {
@@ -85,7 +100,22 @@ public class VirtualModem {
     	}	
     }
     
-    private void getImage(Modem modem) {
+    private boolean checkDelimiter( int[] delimiter, int delimeter_index, int incoming_byte ) {
+	    // Check for image end
+		if ( end_image_delimiter[delimeter_index] == incoming_byte ) { // Candidate delimiter 
+			delimeter_index++;
+		}
+		else { // Reset
+			delimeter_index = 0;
+		}
+		if ( delimeter_index == delimiter.length ) { //Confirmed delimiter
+			System.out.println("#confirmed img end"); 
+			return true;
+		}
+		return false;
+    }
+    
+    private void getImage() {
     	File img = null;
     	OutputStream image_file = null;
     	try {
@@ -112,17 +142,9 @@ public class VirtualModem {
 		    		
 	    		    image_file.write(incoming_byte);
 		    		
-	    		    // Check for image end
-		    		if ( end_image_delimiter[image_delimeter_index] == incoming_byte ) { // Candidate delimiter 
-		    			image_delimeter_index++;
-		    		}
-		    		else { // Reset
-		    			image_delimeter_index = 0;
-		    		}
-		    		if ( image_delimeter_index == end_image_delimiter.length ) { //Confirmed delimiter
-		    			System.out.println("#confirmed img end"); 
-		    			break;
-		    		}
+	    		    if(checkDelimiter( end_image_delimiter, image_delimeter_index, incoming_byte))
+	    		    	break;
+	    		    
 	    		}
 	    		catch (Exception e) {
 	    	    	System.out.println("#Exception while reading."); 
