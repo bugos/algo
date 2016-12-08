@@ -45,22 +45,21 @@ public class VirtualModem {
 	int timeout = 2000;
 
 	Modem modem;
+	long connection_timeout = 20000;
 	String endline = "\r";
 	String imageParameters = "CAM=PTZ"; // FIX, PTZ, 01, 02, ...
-	String server_name              = "ithaki";
-	String echo_request_code        = "E2693";
-	String image_request_code       = "M4806"; 
-	String image_error_request_code = "M5525";
-	String gps_request_code         = "G4379";
-	String ack_request_code         = "G4379";
-	String nack_request_code        = "G4379";
-	long connection_timeout = 20000;
+	String SERVER_NAME              = "ithaki";
+	String ECHO_REQUEST_CODE        = "E2693";
+	String IMAGE_REQUEST_CODE       = "M4806"; 
+	String IMAGE_ERROR_REQUEST_CODE = "M5525";
+	String GPS_REQUEST_CODE         = "G4379";
+	String ACK_REQUEST_CODE         = "G4379";
+	String NACK_REQUEST_CODE        = "G4379";
 	DelimiterChecker start_image_delimiter = new DelimiterChecker(new int[]{ 0xFF, 0xD8 });
 	DelimiterChecker end_image_delimiter = new DelimiterChecker(new int[]{ 0xFF, 0xD9 });
 	DelimiterChecker start_gps_delimiter = new DelimiterChecker("START ITHAKI GPS TRACKING\r\n");
 	DelimiterChecker gps_line_delimiter = new DelimiterChecker(new int[]{ 0x0D, 0x0A });
 	DelimiterChecker end_gps_delimiter = new DelimiterChecker("STOP ITHAKI GPS TRACKING\r\n");
-
 	
 	Vector<GPGGATrace> GPSTraces = new Vector<GPGGATrace>(4);
 	double traceTimeDifference = 4;
@@ -70,10 +69,10 @@ public class VirtualModem {
     }
     
     public void demo() {
-    	modemWrite(echo_request_code);
+    	modemWrite(ECHO_REQUEST_CODE);
     	//modemWrite(image_request_code + imageParameters);
-    	modemWrite(gps_request_code);
-    	modemWrite(gps_request_code + GPGGATrace.getGPSImageParameters(GPSTraces) );
+    	modemWrite(GPS_REQUEST_CODE + "R=1000140");
+    	//modemWrite(gps_request_code + GPGGATrace.getGPSImageParameters(GPSTraces) );
     	receiveResponse();
     	
     	modem.close();
@@ -83,7 +82,7 @@ public class VirtualModem {
     	modem = new Modem();
     	modem.setSpeed(speed);
     	modem.setTimeout(timeout);
-    	modem.open(server_name);
+    	modem.open(SERVER_NAME);
     }
     
     private boolean modemWrite(String s) {
@@ -180,7 +179,7 @@ public class VirtualModem {
     	} while(!gps_line_delimiter.nextByte(incoming_byte));
     }
     
-    private void getImage() {
+    private void getImage() throws IOException {
     	File img = null;
     	OutputStream image_file = null;
     	try {
@@ -210,15 +209,9 @@ public class VirtualModem {
     		    	break;  
 	    	}	
 	    }
-    	catch (IOException e) {
-	    	System.out.println("#IOException"); 
-	    	e.printStackTrace();
-    	}
     	finally {
 			if (image_file != null)
-				try {
 					image_file.close();
-				} catch (IOException e) {}
 		}
 	}
 }
