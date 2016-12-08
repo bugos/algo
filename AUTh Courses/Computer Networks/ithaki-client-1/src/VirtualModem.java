@@ -1,7 +1,44 @@
 import ithakimodem.*;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+
+class GPGGATrace {
+	Date timestamp;
+	String latitude;
+	String longitude;
+	SimpleDateFormat GPSTimeFormat = new SimpleDateFormat("kkmmss.SSS");
+	
+	GPGGATrace(String[] data) {
+		try {
+			timestamp = GPSTimeFormat.parse(data[1]);
+		} catch (ParseException e) {}
+		latitude = data[2].replace(".", "").substring(0, 5);
+		longitude = data[4].replace(".", "").substring(0, 5);;
+	}
+	
+	public static String getDegreesMinutesSeconds(String coordinate) {
+		String degrees = coordinate.substring(0, 2);
+		String minutes = coordinate.substring(2, 4);
+		int minutesDecimalPart = Integer.parseInt(coordinate.substring(5)); // to seconds
+		int intSeconds = minutesDecimalPart * 60 / 10000; // 10000 for 4digit minutesDecimalPart
+		String seconds = String.format("%02d", intSeconds);
+		System.out.println(coordinate + " " + minutesDecimalPart + " " + seconds );
+
+		return degrees + minutes + seconds; //DDMMSS
+	}
+    public static String getGPSImageParameters(Vector<GPGGATrace> GPSTraces) {
+    	String parameters = new String();
+    	for (GPGGATrace trace: GPSTraces) {
+    		parameters += "T=" + getDegreesMinutesSeconds(trace.longitude) + getDegreesMinutesSeconds(trace.latitude);
+    	}
+    	return parameters;
+    }
+}
 
 public class VirtualModem {
 	int speed = 10000;
@@ -11,39 +48,54 @@ public class VirtualModem {
 	String endline = "\r";
 	String imageParameters = "CAM=PTZ"; // FIX, PTZ, 01, 02, ...
 	String server_name              = "ithaki";
-	String echo_request_code        = "E1608";
-	String image_request_code       = "M5525"; 
+	String echo_request_code        = "E2693";
+	String image_request_code       = "M4806"; 
 	String image_error_request_code = "M5525";
-	String gps_request_code         = "E4541";
+	String gps_request_code         = "G4379";
+	String ack_request_code         = "G4379";
+	String nack_request_code        = "G4379";
 	long connection_timeout = 20000;
-	int[] start_image_delimiter = { 0xFF, 0xD8 };
-	int[] end_image_delimiter = { 0xFF, 0xD9 };
-	byte[] start_gps_delimiter = "START ITHAKI GPS TRACKING\r\n".getBytes();
-	byte[] end_gps_delimiter = "START ITHAKI GPS TRACKING\r\n".getBytes();
+	DelimiterChecker start_image_delimiter = new DelimiterChecker(new int[]{ 0xFF, 0xD8 });
+	DelimiterChecker end_image_delimiter = new DelimiterChecker(new int[]{ 0xFF, 0xD9 });
+	DelimiterChecker start_gps_delimiter = new DelimiterChecker("START ITHAKI GPS TRACKING\r\n");
+	DelimiterChecker gps_line_delimiter = new DelimiterChecker(new int[]{ 0x0D, 0x0A });
+	DelimiterChecker end_gps_delimiter = new DelimiterChecker("STOP ITHAKI GPS TRACKING\r\n");
+
 	
+	Vector<GPGGATrace> GPSTraces = new Vector<GPGGATrace>(4);
+	double traceTimeDifference = 4;
+			
     public static void main(String[] args) {
     	new VirtualModem().demo();
     }
     
     public void demo() {
-    	modem = new Modem();
-    	modem.setSpeed(speed);
-    	modem.setTimeout(timeout);
-    	modem.open(server_name);
-    	
-    	//echoRequest(modem);
-    	//imageRequest(modem);
-    	
     	modemWrite(echo_request_code);
-    	modemWrite(image_request_code + imageParameters);
+    	//modemWrite(image_request_code + imageParameters);
     	modemWrite(gps_request_code);
+    	modemWrite(gps_request_code + GPGGATrace.getGPSImageParameters(GPSTraces) );
     	receiveResponse();
     	
     	modem.close();
     }
     
+    VirtualModem() {
+    	modem = new Modem();
+    	modem.setSpeed(speed);
+    	modem.setTimeout(timeout);
+    	modem.open(server_name);
+    }
+    
     private boolean modemWrite(String s) {
+    	System.out.println("#Sent: " + s); 
     	return modem.write((s + endline).getBytes());
+    }
+    private int modemRead() {
+    	return modem.read();
+//		if ( incoming_byte == -1) {
+//	    	System.out.println("#Received -1"); 
+//			throw ;
+//		}
     }
     
     // NOTE : Break endless loop by catching sequence "\r\n\n\n".
@@ -53,10 +105,11 @@ public class VirtualModem {
     	System.out.println("#Receiving...");
     	int incoming_byte;
     	long startTime = System.currentTimeMillis(), elapsedTime, lastActiveTime = startTime;
-    	int image_delimeter_index = 0;
-    	while( true ) {
-    		try {	
-    			// Timeout timer
+    	start_image_delimiter.reset();
+    	start_gps_delimiter.reset();
+		try {	
+	    	while( true ) {
+				// Timeout timer
 	    		elapsedTime = System.currentTimeMillis() - lastActiveTime;
 	    		if ( elapsedTime > connection_timeout ) {
 	    	    	System.out.println("#Timeout reached");
@@ -73,46 +126,58 @@ public class VirtualModem {
 	    		
 	    		System.out.print((char) incoming_byte);
 	    		
-    		    if(checkDelimiter( start_image_delimiter, image_delimeter_index, incoming_byte))
-    		    	getImage();
-    		    if(checkDelimiter( start_gps_delimiter, image_delimeter_index, incoming_byte))
-    		    	//getGPS();
-	    		// Check for image
-//	    		if ( start_image_delimiter[image_delimeter_index] == incoming_byte ) { // Candidate delimiter 
-//	    			System.out.println("#candidate img"); 
-//	    			image_delimeter_index++;
-//	    		}
-//	    		else { // Reset
-//	    			image_delimeter_index = 0;
-//	    		}
-//	    		if ( image_delimeter_index == start_image_delimiter.length ) { //Confirmed delimiter
-//	    			System.out.println("#confirmed img"); 
-//	    			getImage(modem);
-//	    		}
+			    if(start_image_delimiter.nextByte(incoming_byte))
+			    	getImage();
+			    if(start_gps_delimiter.nextByte(incoming_byte))
+			    	getGPS();
 	    		lastActiveTime = System.currentTimeMillis();
-	    		
-	    		
     		}
-    		catch (Exception e) {
-    	    	System.out.println("#Exception while reading."); 
-    			break;
-    		}
+
     	}	
+		catch (Exception e) {
+	    	System.out.println("#Exception while reading."); 
+		}
     }
     
-    private boolean checkDelimiter( int[] delimiter, int delimeter_index, int incoming_byte ) {
-	    // Check for image end
-		if ( end_image_delimiter[delimeter_index] == incoming_byte ) { // Candidate delimiter 
-			delimeter_index++;
-		}
-		else { // Reset
-			delimeter_index = 0;
-		}
-		if ( delimeter_index == delimiter.length ) { //Confirmed delimiter
-			System.out.println("#confirmed img end"); 
-			return true;
-		}
-		return false;
+    private void getGPS() {
+		// Get gps bytes
+    	int incoming_byte;
+    	DelimiterChecker end_gps_delimiter = new DelimiterChecker("START ITHAKI GPS TRACKING\r\n");
+    	DelimiterChecker GPGGA_delimiter = new DelimiterChecker("$GPGGA");
+    	do {
+    		incoming_byte = modem.read();
+    		if ( incoming_byte == -1) {
+    	    	System.out.println("#Received -1"); 
+    			break;
+    		}
+    		
+    	    String lineBuffer = new String();
+     		
+		    if(GPGGA_delimiter.nextByte(incoming_byte, lineBuffer)) { //just save line and check GGA,...
+		    	getGPGGA(lineBuffer);
+	    		GPGGATrace candidateTrace = new GPGGATrace(lineBuffer.trim().split(","));
+		    	long GPSTimeDifference = candidateTrace.timestamp.getTime() - GPSTraces.lastElement().timestamp.getTime();
+		    	if ( GPSTraces.isEmpty() || traceTimeDifference <= GPSTimeDifference / 4. ) { // convert to seconds and compare
+		    		GPSTraces.add(candidateTrace);
+		    	}
+		    }
+    		// other commands...
+    		
+    	} while (!end_gps_delimiter.nextByte(incoming_byte));	
+    }
+    
+    private void getGPGGA(String lineBuffer) {
+	    int incoming_byte;
+    	DelimiterChecker gps_line_delimiter = new DelimiterChecker(new int[]{ 0x0D, 0x0A });
+    	do {
+    		incoming_byte = modem.read();
+    		if ( incoming_byte == -1) {
+    	    	System.out.println("#Received -1"); 
+    			break;
+    		}
+    		
+    		lineBuffer += (char)incoming_byte;
+    	} while(!gps_line_delimiter.nextByte(incoming_byte));
     }
     
     private void getImage() {
@@ -126,30 +191,23 @@ public class VirtualModem {
     		image_file = new FileOutputStream(img);
         	
     		// Write delimiter bytes
-    		for (int delimiter_byte : start_image_delimiter)
+    		for (int delimiter_byte : start_image_delimiter.delimiter)
     			image_file.write(delimiter_byte);
     		
     		// Get image bytes
-    		int image_delimeter_index = 0;
 	    	int incoming_byte;
+	    	end_image_delimiter.reset();
 	    	while( true ) {
-	    		try {
-		    		incoming_byte = modem.read();
-		    		if ( incoming_byte == -1) {
-		    	    	System.out.println("#Received -1"); 
-		    			break;
-		    		}
-		    		
-	    		    image_file.write(incoming_byte);
-		    		
-	    		    if(checkDelimiter( end_image_delimiter, image_delimeter_index, incoming_byte))
-	    		    	break;
-	    		    
-	    		}
-	    		catch (Exception e) {
-	    	    	System.out.println("#Exception while reading."); 
+	    		incoming_byte = modem.read();
+	    		if ( incoming_byte == -1) {
+	    	    	System.out.println("#Received -1"); 
 	    			break;
-	    		} 
+	    		}
+	    		
+    		    image_file.write(incoming_byte);
+	    		
+    		    if(end_image_delimiter.nextByte(incoming_byte))
+    		    	break;  
 	    	}	
 	    }
     	catch (IOException e) {
@@ -157,14 +215,11 @@ public class VirtualModem {
 	    	e.printStackTrace();
     	}
     	finally {
-			try {
-				if (image_file != null)
+			if (image_file != null)
+				try {
 					image_file.close();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
+				} catch (IOException e) {}
 		}
 	}
-    
 }
+
