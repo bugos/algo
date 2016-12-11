@@ -37,13 +37,13 @@ class DelimiterChecker {
 		}
 		return false;
     }
-	public boolean nextByte(int incoming_byte, String buffer ) {
-		boolean result = nextByte(incoming_byte );
-		if (result) {
-			for (int c: delimiter)
-				buffer += (char)c;
+	
+	public String getString() {
+		String delimiter = new String();
+		for (int c: this.delimiter) {
+			delimiter += (char)c;
 		}
-		return result;
+		return delimiter;
 	}
 	
 	public void reset() {
