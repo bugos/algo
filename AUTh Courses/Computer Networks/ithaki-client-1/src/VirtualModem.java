@@ -8,31 +8,27 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 public class VirtualModem {
-	int speed = 10000;
-	int timeout = 2000;
-
 	Modem modem;
-	long connection_timeout = 2000;
-	String imageParameters = "CAM=PTZ"; // FIX, PTZ, 01, 02, ...
-	int arqDuration = 4; // seconds
-	
+	static final long   BUFFER_TIMEOUT           = 2000;
+	static final int    ARQ_DURATION             = 4; // seconds
+	static final int    ECHO_DURATION            = 4; // seconds	
 	static final String REQUEST_ENDLINE          = "\r";
 	static final String SERVER_NAME              = "ithaki";
-	static final String ECHO_REQUEST_CODE        = "E1170";
-	static final String IMAGE_REQUEST_CODE       = "M5105"; 
+	static final String ECHO_REQUEST_CODE        = "E6511";
+	static final String IMAGE_REQUEST_CODE       = "M6007";
 	static final String IMAGE_ERROR_REQUEST_CODE = "G4980";
-	static final String GPS_REQUEST_CODE         = "P9275";
-	static final String ACK_REQUEST_CODE         = "G4379";
-	static final String NACK_RESULT_CODE         = "G4379";
-	DelimiterChecker nocarrier_delimiter = new DelimiterChecker("NO CARRIER");
-	DelimiterChecker start_echo_delimiter = new DelimiterChecker("PSTART");
-	DelimiterChecker end_echo_delimiter = new DelimiterChecker("PSTOP");
+	static final String GPS_REQUEST_CODE         = "P3970";
+	static final String ACK_REQUEST_CODE         = "Q3809";
+	static final String NACK_RESULT_CODE         = "R3551";
+	DelimiterChecker nocarrier_delimiter   = new DelimiterChecker("NO CARRIER");
+	DelimiterChecker start_echo_delimiter  = new DelimiterChecker("PSTART");
+	DelimiterChecker end_echo_delimiter    = new DelimiterChecker("PSTOP");
 	DelimiterChecker start_image_delimiter = new DelimiterChecker(new int[]{ 0xFF, 0xD8 });
-	DelimiterChecker end_image_delimiter = new DelimiterChecker(new int[]{ 0xFF, 0xD9 });
-	DelimiterChecker start_gps_delimiter = new DelimiterChecker("START ITHAKI GPS TRACKING\r\n");
-	DelimiterChecker end_gps_delimiter = new DelimiterChecker("STOP ITHAKI GPS TRACKING\r\n");
-	DelimiterChecker gps_line_delimiter = new DelimiterChecker(new int[]{ 0x0D, 0x0A });
-	DelimiterChecker GPGGA_delimiter = new DelimiterChecker("$GPGGA");
+	DelimiterChecker end_image_delimiter   = new DelimiterChecker(new int[]{ 0xFF, 0xD9 });
+	DelimiterChecker start_gps_delimiter   = new DelimiterChecker("START ITHAKI GPS TRACKING\r\n");
+	DelimiterChecker end_gps_delimiter     = new DelimiterChecker("STOP ITHAKI GPS TRACKING\r\n");
+	DelimiterChecker gps_line_delimiter    = new DelimiterChecker(new int[]{ 0x0D, 0x0A });
+	DelimiterChecker GPGGA_delimiter       = new DelimiterChecker("$GPGGA");
 	
 			
     public static void main(String[] args) {
@@ -46,18 +42,21 @@ public class VirtualModem {
     }
     
     public void demo() throws Exception {
-    	request(ECHO_REQUEST_CODE);
-    	request(IMAGE_REQUEST_CODE + imageParameters);
-    	request(GPS_REQUEST_CODE + "R=1000140");
-    	request(GPS_REQUEST_CODE + GPGGATrace.getGPSImageParameters() );
+    	//request(ECHO_REQUEST_CODE);
+    	//request(IMAGE_REQUEST_CODE + "CAM=PTZ");  // FIX, PTZ, 01, 02, ...
+    	//request(IMAGE_ERROR_REQUEST_CODE);
+    	//request(GPS_REQUEST_CODE + "R=1000140");
+    	//request(GPS_REQUEST_CODE + GPGGATrace.getGPSImageParameters() );
+    	//requestArq();
+    	getEchoPackets();
 
     	modem.close();
     }
     
     VirtualModem() {
     	modem = new Modem();
-    	modem.setSpeed(speed);
-    	modem.setTimeout(timeout);
+    	modem.setSpeed(10000);
+    	modem.setTimeout(2000);
     	modem.open(SERVER_NAME);
     }    
     
@@ -76,7 +75,7 @@ public class VirtualModem {
 	    	
 			// Timeout timer
     		elapsedTime = System.currentTimeMillis() - startTime;
-    		if ( connection_timeout < elapsedTime ) {
+    		if ( BUFFER_TIMEOUT < elapsedTime ) {
     	    	System.out.println("#Timeout reached");
     			throw new Exception();
     		}
@@ -85,83 +84,71 @@ public class VirtualModem {
     }
     
     // NOTE : Break endless loop by catching sequence "\r\n\n\n".
-    private void request(String requestContent) throws Exception {
+    void request(String requestContent) throws Exception {
     	modemWrite(requestContent);
-    	
+
     	System.out.println("#Receiving...");
     	int incoming_byte;
-    	nocarrier_delimiter.reset();
-    	start_echo_delimiter.reset();
-    	start_image_delimiter.reset();
-    	start_gps_delimiter.reset();
+    	boolean reset = true;
     	do {
     		incoming_byte = modem.read();
 
+    		if (reset) {
+    	    	nocarrier_delimiter.reset();
+    	    	start_echo_delimiter.reset();
+    	    	start_image_delimiter.reset();
+    	    	start_gps_delimiter.reset();
+    		}
+    		reset = true; // will reset if something is found
 		    if(nocarrier_delimiter.nextByte(incoming_byte))
 		    	throw new Exception();
 		    else if(start_echo_delimiter.nextByte(incoming_byte))
-		    	System.out.println(getEcho());
+		    	System.out.println(getLine(start_echo_delimiter, end_echo_delimiter));
 		    else if(start_image_delimiter.nextByte(incoming_byte))
 		    	getImage();
 		    else if(start_gps_delimiter.nextByte(incoming_byte))
 		    	getGPS();
 		    else
-		    	continue; //only reset if delimiter found.
-	    	nocarrier_delimiter.reset();
-	    	start_echo_delimiter.reset();
-	    	start_image_delimiter.reset();
-	    	start_gps_delimiter.reset();
+		    	reset = false; //only reset if delimiter found.
+		    
 		} while( incoming_byte != -1 );
     }
     
-    private String getEcho() throws Exception {
-    	String result = new String();
-		for (int delimiter_byte : start_echo_delimiter.delimiter)
-			result += delimiter_byte;
+    String getLine(DelimiterChecker startDelimiter, DelimiterChecker endDelimiter) throws Exception {
+    	String result = new String( startDelimiter.getString() ); // not always needed!!!
+    	endDelimiter.reset();
     	int incoming_byte;    	
     	do {
     		incoming_byte = modemRead();
     		result += (char) incoming_byte;
-    	} while (!end_echo_delimiter.nextByte(incoming_byte));
+    	} while (!endDelimiter.nextByte(incoming_byte));
     	return result;
     }
-   
-    private void getGPS() throws Exception {
+ 
+    void getGPS() throws Exception {
     	int incoming_byte;    	
     	do {
     		incoming_byte = modemRead();
     	 
 		    if(GPGGA_delimiter.nextByte(incoming_byte)) { //just save line and check GGA,...
-	    		GPGGATrace candidateTrace = new GPGGATrace(getGPGGA().trim().split(","));
+	    		GPGGATrace candidateTrace = new GPGGATrace(getLine(GPGGA_delimiter, gps_line_delimiter).trim().split(","));
 	    		candidateTrace.addToImage();
+	    		System.out.println(candidateTrace);
 		    }
     		// other commands...
     	} while (!end_gps_delimiter.nextByte(incoming_byte));	
     }
     
-    private String getGPGGA() throws Exception {
-    	String lineBuffer = new String(GPGGA_delimiter.getString());
-    	
-	    int incoming_byte;
-    	gps_line_delimiter.reset();
-    	do {
-    		incoming_byte = modemRead();
-    		lineBuffer += (char)incoming_byte;
-    	} while(!gps_line_delimiter.nextByte(incoming_byte));
-    	return lineBuffer;
-    }
-    
-    private void getImage() throws Exception {
+    void getImage() throws Exception {
     	OutputStream image_file = null;
     	try {
         	File img = null;
-        	for (int i = 0; img == null || img.exists(); i++)//Calculate unique name
+        	for (int i = 0; img == null || img.exists(); i++) //Calculate unique name
         		img = new File("img" + i + ".jpg");
     		image_file = new FileOutputStream(img);
         	
     		// Write delimiter bytes
-    		for (int delimiter_byte : start_image_delimiter.delimiter)
-    			image_file.write(delimiter_byte);
+    		image_file.write(start_image_delimiter.getString().getBytes());
     		
     		// Get image bytes
 	    	int incoming_byte;
@@ -179,12 +166,12 @@ public class VirtualModem {
 	}
     
     // Get ArqPacket and return tries count
-    private int getArq() throws Exception {
+    int getArq() throws Exception {
 		boolean foundError = true;
 		int resends = 0;
 		do {
 			// Parse
-			String line = getEcho();
+			String line = getLine(start_echo_delimiter, end_echo_delimiter);
 			int packetStart = line.indexOf('<') + 1, packetEnd = line.indexOf('>');
 			String packet = line.substring(packetStart, packetEnd);
 			int FCS = Integer.parseInt(line.substring(packetEnd + 2, packetEnd + 5)); // FCS length=3
@@ -197,26 +184,51 @@ public class VirtualModem {
 			foundError = (result == FCS);
 			
 			if (foundError) {
-				request(NACK_RESULT_CODE);
+				System.out.println("Found ARQ error");
+				modemWrite(NACK_RESULT_CODE);
 				resends++;
 			}
 		} while (foundError);
+		System.out.println("Successfully received package.");
 		return resends;
     }
     
-    private void requestArq() throws Exception {
-		System.out.println("Receiving ARQ");
+    void requestArq() throws Exception {
+		System.out.println("#Receiving ARQ");
+		FileOutputStream logfile = new FileOutputStream("arqlog.txt"); 
+		int packets = 0;
     	long startTime = System.currentTimeMillis(), elapsedTime;
 		do {
+			packets++;
 			modemWrite(ACK_REQUEST_CODE);
 			long errorTime = System.currentTimeMillis();
 			int resends = getArq();
-			errorTime = errorTime - System.currentTimeMillis();
-	    	//write to file
-			
-	    	elapsedTime = System.currentTimeMillis() - startTime;
-		} while ( arqDuration > elapsedTime );
+			errorTime = System.currentTimeMillis() - errorTime;
+			logfile.write((packets + "\t" + errorTime + "\t" + resends + "\r\n").getBytes());
+	    	elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
+		} while ( ARQ_DURATION > elapsedTime );
+		System.out.println("#Finished receiving ARQ");
+		logfile.close();
     }
+    
+	//Implements the simple packet reception for "sessionTime" seconds and saves results to "filename" file.
+	void getEchoPackets() throws Exception {
+		System.out.println("#Receiving Echo");
+		FileOutputStream logfile = new FileOutputStream("echolog.txt"); 
+		int packets = 0;
+    	long startTime = System.currentTimeMillis(), elapsedTime;
+		do  {
+			packets++;
+			modemWrite(ECHO_REQUEST_CODE);
+			long echoTime = System.currentTimeMillis();
+			getLine(start_echo_delimiter, end_echo_delimiter);
+			echoTime = System.currentTimeMillis() - echoTime;
+			logfile.write((packets + "\t" + echoTime + "\r\n").getBytes());
+	    	elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
+		} while ( ECHO_DURATION > elapsedTime);
+		System.out.println("#Finished receiving Echo");
+		logfile.close();
+	}
 }
 
 class GPGGATrace {
@@ -225,8 +237,8 @@ class GPGGATrace {
 	String longitude;
 	SimpleDateFormat GPSTimeFormat = new SimpleDateFormat("kkmmss.SSS");
 	public static Vector<GPGGATrace> GPSTraces = new Vector<GPGGATrace>(4);
-	static int TRACE_TIME_DIFFERENCE = 20;
-	static int TRACE_COUNT = 7;
+	static int TRACE_TIME_DIFFERENCE = 4;
+	static int TRACE_COUNT           = 6;
 	
 	GPGGATrace(String[] data) throws ParseException {
 		timestamp = GPSTimeFormat.parse(data[1]);
@@ -234,7 +246,7 @@ class GPGGATrace {
 		longitude = data[4];
 	}
 	
-	public void addToImage() {
+	public void addToImage() { // Check TRACE_TIME_DIFFERENCE.
 		if (GPSTraces.size() >= TRACE_COUNT)
 			return;
 		long GPSTimeDifference = Long.MAX_VALUE; // First element always accepted
@@ -259,7 +271,6 @@ class GPGGATrace {
 		String seconds = String.format("%02d", Math.round(minutesDecimalPart * 60 / 10000.)); // 10000 for 4digit minutesDecimalPart
 		degrees = String.format("%02d", Integer.parseInt(degrees));
 		System.out.println(coordinate + " " + minutesDecimalPart + " " + seconds + " " + minutesDecimalPart * 60 / 10000.);
-
 		return degrees + minutes + seconds; //DDMMSS
 	}
 	
