@@ -37,8 +37,16 @@ class DelimiterChecker {
 		}
 		return delimiter;
 	}
+	public byte[] getBytes() {
+		byte[] delimiter = new byte[this.delimiter.length];
+		for (int i = 0; i < delimiter.length; i++) {
+			delimiter[i] = (byte)this.delimiter[i];
+		}
+		return delimiter;
+	}
 	
 	public void reset() {
 		index = 0;
 	}
+	
 }
