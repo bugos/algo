@@ -8,12 +8,12 @@ import java.util.concurrent.TimeUnit;
 
 public class VirtualModem {
 	Modem modem;
-	static final String ECHO_REQUEST_CODE        = "E2718";
-	static final String IMAGE_REQUEST_CODE       = "M4270";
-	static final String IMAGE_ERROR_REQUEST_CODE = "G3088";
-	static final String GPS_REQUEST_CODE         = "P5114";
-	static final String ACK_REQUEST_CODE         = "Q1076";
-	static final String NACK_RESULT_CODE         = "R0012";
+	static final String ECHO_REQUEST_CODE        = "E5525";
+	static final String IMAGE_REQUEST_CODE       = "M3497";
+	static final String IMAGE_ERROR_REQUEST_CODE = "G1742";
+	static final String GPS_REQUEST_CODE         = "P3804";
+	static final String ACK_REQUEST_CODE         = "Q5284";
+	static final String NACK_RESULT_CODE         = "R9283";
 	DelimiterChecker nocarrier_delimiter   = new DelimiterChecker("NO CARRIER");
 	DelimiterChecker start_echo_delimiter  = new DelimiterChecker("PSTART");
 	DelimiterChecker end_echo_delimiter    = new DelimiterChecker("PSTOP");
@@ -32,15 +32,17 @@ public class VirtualModem {
 	    	e.printStackTrace();
 		}
     }
+    
+    //bug: multiple options dont work: we get -1.
     public void demo() throws Exception {
-    	requestAndHandleResponse(ECHO_REQUEST_CODE);
-//    	requestAndHandleResponse(IMAGE_REQUEST_CODE + "CAM=PTZ");  // FIX, PTZ, 01, 02, ...
+//    	requestAndHandleResponse(ECHO_REQUEST_CODE);
+//    	requestAndHandleResponse(IMAGE_REQUEST_CODE + "CAM=PTZ" );  // FIX, PTZ, 01, 02, ...
 //    	requestAndHandleResponse(IMAGE_ERROR_REQUEST_CODE);
-    	requestAndHandleResponse(GPS_REQUEST_CODE + "R=1004090");
+//    	requestAndHandleResponse(GPS_REQUEST_CODE + "R=1014090");
 //    	requestAndHandleResponse(GPS_REQUEST_CODE + GPGGATrace.getGPSImageParameters() );
 //    	getPackets(ECHO_REQUEST_CODE, 4 * 60, "echolog", () -> getLine(start_echo_delimiter, end_echo_delimiter).length());
-//    	getPackets(ACK_REQUEST_CODE,  4 * 60, "arqlog",  () -> getArq());
-//    	
+    	getPackets(ACK_REQUEST_CODE,  4 * 60, "arqlog",  () -> getArq());
+    	
     	modem.close();
     }
     VirtualModem() {
@@ -50,7 +52,7 @@ public class VirtualModem {
     	modem.open("ithaki");
     }    
     private boolean modemWrite(String s) {
-    	System.out.println("#Sent: " + s); 
+//    	System.out.println("#Sent: " + s); 
     	return modem.write((s + "\r").getBytes());
     }
     
@@ -62,7 +64,7 @@ public class VirtualModem {
 	    	System.out.println("#Received -1");
 	    	TimeUnit.SECONDS.sleep(1);
 	    	
-    		if ( 5 < tries++ ) {
+    		if ( 3 < tries++ ) {
     	    	System.out.println("#Retry limit reached");
     			throw new Exception();
     		}
@@ -84,6 +86,7 @@ public class VirtualModem {
     	    	start_image_delimiter.reset();
     	    	start_gps_delimiter.reset();
     		}
+    		
     		resetDelimiters = true; // will reset if something is found
 		    if(nocarrier_delimiter.nextByte(incoming_byte))
 		    	throw new Exception();
