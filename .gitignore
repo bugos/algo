@@ -9,3 +9,5 @@ __pycache__/
 *.class
 
 .DS_Store
+
+*.o
