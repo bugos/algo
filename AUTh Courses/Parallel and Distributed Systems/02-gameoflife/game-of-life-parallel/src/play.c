@@ -76,7 +76,12 @@ void play (int *board, int *newboard, int N, int M, int MPIRank, int MPISize) {
   MPI_Wait(&bottom_recv_request, &mpistat);
   calculateRow(board, newboard, N , M, 0,   top_recv);
   calculateRow(board, newboard, N , M, N-1, bottom_recv);
-
+  
+  /*Swap the board in main after the play  
+    int *temp = newboard;
+    newboard = board;
+    board = temp;*/
+  
   /* COPY the new board back into the old board */
   for (i=0; i<N; i++) {
     for (j=0; j<N; j++) {
