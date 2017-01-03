@@ -46,21 +46,29 @@ void play (int *board, int *newboard, int N, int M, int MPIRank, int MPISize) {
   int *bottom_send = (int *)malloc(rowSize);
   int *top_recv    = (int *)malloc(rowSize);
   int *bottom_recv = (int *)malloc(rowSize);
-  
+  //top and bottomsend are not necessary
   memcpy(top_send,    board,                       rowSize);
   memcpy(bottom_send, board + boardSize - rowSize, rowSize);
   
   int topRank    = (MPIrank - 1) % MPISize;
   int bottomRank = (MPIrank + 1) % MPISize;
-
+  //Because there is 2 mpirecv we maybe need mpistat[2] 
   MPI_Status mpistat;
   MPI_Request top_recv_request, bottom_recv_request, top_send_request, bottom_send_request;
   MPI_Isend(top_send,    M, MPI_INT, topRank,    0, MPI_COMM_WORLD, &top_send_request   );
   MPI_Isend(bottom_send, M, MPI_INT, bottomRank, 1, MPI_COMM_WORLD, &bottom_recv_request);
   MPI_Irecv(top_recv,    M, MPI_INT, topRank,    0, MPI_COMM_WORLD, &top_recv_request   );
   MPI_Irecv(bottom_recv, M, MPI_INT, bottomRank, 1, MPI_COMM_WORLD, &bottom_send_request);
+ /*we must wait to send and recieve the first and last row 
+  before the internal because it possible to
+  modify them in the next generation*/
+  MPI_Wait(&top_recv_request,    &mpistat);
+  MPI_Wait(&bottom_recv_request, &mpistat);
+  MPI_Wait(&top_send_request,    &mpistat);
+  MPI_Wait(&bottom_send_request, &mpistat);
   //====================================================
-
+  
+  
   /* apply the rules of Life to INTERNAL cells*/
   //omp_set_nested(false)
   //#pragma omp parallel for
