@@ -7,14 +7,12 @@
 
 /* print the life board */
 
-void print (int *board, int N) {
+void print (char *board, int N, int M) {
   int   i, j;
-
   /* for each row */
-  for (j=0; j<N; j++) {
-
+  for (i=0; i<N; i++) {
     /* print each column position... */
-    for (i=0; i<N; i++) {
+      for (j=0; j<M; j++) {
       printf ("%c", Board(i,j) ? 'x' : ' ');
     }
 
@@ -27,8 +25,8 @@ void print (int *board, int N) {
 
 /* display the table with delay and clear console */
 
-void display_table(int *board, int N) {
-  print (board, N);
+void display_table(char *board, int N, int M) {
+  print (board, N, M);
   usleep(100000);  
   /* clear the screen using VT100 escape codes */
   puts ("\033[H\033[J");
