@@ -1,0 +1,30 @@
+'''
+|C| BugOS
+https://www.facebook.com/hackercup/problem/169401886867367/
+'''
+import math, fileinput
+
+MIN_ROUTE_WEIGHT = 50
+def getMaxLazyTrips(weights):
+  #print(weights)
+  weights.sort()
+  remaining = len(weights)
+  trips = 0
+  while remaining > 0:
+    #print(weights[-1])
+    remaining -= -(-MIN_ROUTE_WEIGHT // weights.pop()) # ceildiv trick
+    if remaining >=0:
+      trips += 1
+  return trips
+    
+  
+def main():
+  fin = fileinput.input() #open('small2.in', 'r')
+  T = int(fin.readline())
+  for testCase in range(T):
+      N = int(fin.readline())
+      weights = [int(fin.readline()) for item in range(N)]
+      print("Case #%d: %s" % (testCase+1, getMaxLazyTrips(weights)))
+
+#if __name__ == "__main__":
+main()
