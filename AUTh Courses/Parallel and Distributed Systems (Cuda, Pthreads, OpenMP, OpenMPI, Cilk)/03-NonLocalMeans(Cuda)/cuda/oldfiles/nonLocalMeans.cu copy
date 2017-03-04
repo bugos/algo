@@ -1,0 +1,109 @@
+#include <math.h>
+#include <stdio.h>
+
+// Array access macros
+#define INPUT(i,j) A[(i) + (j)*(m)]
+
+#define BSZ = blockDim.x;
+#define i   = threadIdx.x;
+#define j   = threadIdx.y;
+#define bx  = blockIdx.x;
+#define by  = blockIdx.y;
+#define BLOCKSIZE 9
+__constant__ int gaussDistW[BLOCKSIZE * BLOCKSIZE];
+
+__global__ void nlm(double const inputImg, double outputImg, int N, neighSize) {
+
+
+	__shared__ float        blockImg[BSZ+neighSize][BSZ+neighSize];
+	__shared__ float foreignBlockImg[BSZ+neighSize][BSZ+neighSize];
+
+	int I0 = ( BSZ - 2 ) * bx + ( BSZ - 2 ) * bx * N;
+	// Load the first thrednum values
+	int ii = j * BSZ + i;              // 2d to 1d index of thread
+	int I  = ii % ( BSZ + neighSize - 1 ); // x index including padding
+	int J  = ii / ( BSZ + neighSize - 1); // y index including padding
+	int IGlobal = I0 + J * N + I;      // global input index
+	blockImg[I][J] = inputImg[IGlobal];
+
+	// Load the remaining values
+	int ii2 = BSZ * BSZ + j * BSZ + i; // 2d to 1d thread starting
+	int I2  = ii2 % ( BSZ + neighSize - 1 ); // x index including padding
+	int J2  = ii2 / ( BSZ + neighSize - 1 ); // y index including padding
+	 int  IGlobal2 =  I0  +  J2 * N  +  I2;  // N+padding???
+	if ( ( I2 < ( BSZ + 2 ) )  &&  ( J2 < ( BSZ + 2 ) )  &&  ( ii2  <  N * N ) )
+		blockImg[I2][J2] = inputImg[IGlobal2];
+	__syncthreads();
+
+
+	// Compute block weights with self
+	int weightSum = 0, fSum = 0;
+	for(int k = 0; k < BSZ; k++ ) {
+		for(int l = 0; l < BSZ; l++ ) {
+			int weight = 0;
+			for(int m = neighSize / 2; m <= neighSize / 2; m++)
+				for(int n = neighSize / 2; n <= neighSize / 2; n++)
+					weight += gaussDistW[ (n + neighSize / 2) * neighSize + (m + neighSize / 2)] 
+							* ( blockImg[k+m][l+n] - foreignBlockImg[k][l]) ^ 2;
+			weight = exp( -weight );
+			weightSum += weight;
+			fSum      += weight * foreignBlockImg[k][l]
+		}
+	}
+
+	// Compute block weights with other blocks
+	for (int fBlockIndex = 1; fBlockIndex < BSZ * BSZ; fBlockIndex++) { // gia kathe BLOCK stin arxiki eikona (X)
+		//dowmload foreign block image...
+		__syncthreads();
+
+		getWeight(iBlock, jBlock, neighSize, blockImage, xNeighbourhood)
+
+
+		// anevase sti global to getWeight
+	}
+}
+
+
+
+
+// i, j in block
+__device__ void getWeight(int i, int j, int neighSize, float *blockImage, float *xNeighbourhood) {
+	blockIndex = i, j...;
+
+	for(int i = 0; i <= neighSize; i++) {
+		for(int j = 0; i <= neighSize; i++) {
+			neighSize += ( pixelCalculated - blockImage[block]) ^ 2;
+	}
+	sum = exp(-sum);
+}
+
+// HANDLE_ERROR(...);
+
+int main() {
+	int N = 3;
+	int M = 4;
+	float *a = new float[N*M];
+	a[0]=1;a[1]=1;a[2]=0;
+	a[3]=0;a[4]=1;a[5]=1;
+	a[6]=1;a[7]=0;a[8]=1;
+	a[9]=0;a[10]=0;a[11]=1;
+
+	int dev = 0; // to be adjusted or queried according to your needs
+
+    cudaDeviceProp props;
+
+    cudaGetDeviceProperties(&props, dev);
+
+    printf("Amount of shared memory per block is %d bytes\n", props.sharedMemPerBlock);
+
+	float *ad;
+	const int size = N*M*sizeof(float);
+	cudaMalloc( (void**)&ad, size );
+	cudaMemcpy( ad, a, size, cudaMemcpyHostToDevice );
+
+	int blocksize = 16;
+	dim3 dimBlock( blocksize, blocksize );
+	dim3 dimGrid( N/dimBlock.x, M/dimBlock.y );
+	add_matrix<<<dimGrid, dimBlock>>>( ad, N, M );
+
+}
