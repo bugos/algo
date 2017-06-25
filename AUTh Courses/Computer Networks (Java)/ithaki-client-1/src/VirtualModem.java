@@ -31,6 +31,7 @@ public class VirtualModem {
 		catch (Exception e) {
 	    	e.printStackTrace();
 		}
+    	modem.close();
     }
     
     //bug: multiple options dont work: we get -1.
@@ -42,8 +43,6 @@ public class VirtualModem {
 //    	requestAndHandleResponse(GPS_REQUEST_CODE + GPGGATrace.getGPSImageParameters() );
 //    	getPackets(ECHO_REQUEST_CODE, 4 * 60, "echolog", () -> getLine(start_echo_delimiter, end_echo_delimiter).length());
     	getPackets(ACK_REQUEST_CODE,  4 * 60, "arqlog",  () -> getArq());
-    	
-    	modem.close();
     }
     VirtualModem() {
     	modem = new Modem();
